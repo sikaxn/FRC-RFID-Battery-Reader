@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:id="@+id/buttonRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:weightSum="4"
+        android:layout_marginBottom="8dp">
+
+        <Button android:id="@+id/btnCharged" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Charged" />
+        <Button android:id="@+id/btnInit" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Init New" />
+        <Button android:id="@+id/btnStatus" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Set Status" />
+        <Button android:id="@+id/btnMockRobot" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Mock Robot" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/resultLayout"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </ScrollView>
+</LinearLayout>
