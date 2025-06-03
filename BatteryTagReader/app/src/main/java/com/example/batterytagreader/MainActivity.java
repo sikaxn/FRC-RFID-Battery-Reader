@@ -63,20 +63,25 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        Intent intent = new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                this,
-                0,
-                intent,
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_MUTABLE : 0
-        );
-        nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, null);
+        if (nfcAdapter != null) {
+            Intent intent = new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                    this,
+                    0,
+                    intent,
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_MUTABLE : 0
+            );
+            nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, null);
+        }
     }
+
 
     @Override
     protected void onPause() {
         super.onPause();
-        nfcAdapter.disableForegroundDispatch(this);
+        if (nfcAdapter != null) {
+            nfcAdapter.disableForegroundDispatch(this);
+        }
     }
 
     @Override
@@ -206,6 +211,7 @@ public class MainActivity extends Activity {
             int cc = lastJson.optInt("cc", 0);
             lastJson.put("cc", cc + 1);
 
+
             writeToTag(lastJson.toString());
 
         } catch (Exception e) {
@@ -243,6 +249,7 @@ public class MainActivity extends Activity {
             while (u.length() > MAX_RECORDS) u.remove(0);
             lastJson.put("u", u);
 
+
             writeToTag(lastJson.toString());
         } catch (Exception e) {
             showMessage("Failed to mock robot session.");
@@ -265,6 +272,8 @@ public class MainActivity extends Activity {
                         json.put("n", 0);
                         json.put("u", new JSONArray());
                         lastJson = json;
+
+
                         writeToTag(json.toString());
                     } catch (Exception e) {
                         showMessage("Error creating battery record.");
@@ -283,6 +292,8 @@ public class MainActivity extends Activity {
                             return;
                         }
                         lastJson.put("n", which);
+
+
                         writeToTag(lastJson.toString());
                     } catch (Exception e) {
                         showMessage("Failed to set note.");
@@ -291,6 +302,10 @@ public class MainActivity extends Activity {
     }
 
     private void writeToTag(String data) {
+        if (nfcAdapter == null) {
+            showMessage("NFC is not available on this device.");
+            return;
+        }
         try {
             if (lastTag == null) {
                 showMessage("No tag detected.");
