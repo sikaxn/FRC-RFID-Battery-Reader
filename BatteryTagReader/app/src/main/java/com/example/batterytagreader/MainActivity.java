@@ -145,16 +145,46 @@ public class MainActivity extends Activity {
         try {
             JSONObject obj = new JSONObject(rawJson);
             lastJson = obj;
+
             // Avoid logging duplicate reads
             if (!obj.toString().equals(LogHelper.getLastLoggedRaw(this))) {
                 LogHelper.log(this, "read", obj);
             }
 
-
             addLabel("Serial Number", obj.optString("sn"));
             addLabel("First Use", formatDateTime(obj.optString("fu")));
             addLabel("Cycle Count", String.valueOf(obj.optInt("cc")));
-            addLabel("Note Type", noteTypeName(obj.optInt("n")));
+
+            // Check for dark mode once
+            int nightModeFlags = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+            boolean isDark = nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+
+            // Note Type with background color
+            int noteType = obj.optInt("n");
+            TextView noteLabel = new TextView(this);
+            noteLabel.setText("Note Type: " + noteTypeName(noteType));
+            noteLabel.setTextSize(16f);
+            noteLabel.setPadding(0, 12, 0, 4);
+
+            switch (noteType) {
+                case 1: // Practice Only (yellow)
+                    noteLabel.setBackgroundColor(isDark ? 0xFFCCCC00 : 0xFFFFFF99);
+                    noteLabel.setTextColor(0xFF000000);
+                    break;
+                case 2: // Scrap (red)
+                    noteLabel.setBackgroundColor(isDark ? 0xFFCC3333 : 0xFFFF6666);
+                    noteLabel.setTextColor(0xFFFFFFFF);
+                    break;
+                case 3: // Other (blue)
+                    noteLabel.setBackgroundColor(isDark ? 0xFF3366AA : 0xFF99CCFF);
+                    noteLabel.setTextColor(0xFFFFFFFF);
+                    break;
+                default: // Normal
+                    noteLabel.setTextColor(isDark ? 0xFFFFFFFF : 0xFF000000);
+                    break;
+            }
+
+            resultLayout.addView(noteLabel);
 
             JSONArray usage = obj.optJSONArray("u");
             if (usage != null && usage.length() > 0) {
@@ -164,23 +194,37 @@ public class MainActivity extends Activity {
                     entries.add(usage.getJSONObject(i));
                 }
 
-                // Sort descending by "i" (entry ID)
+                // Sort descending by ID
                 entries.sort((a, b) -> Integer.compare(b.optInt("i", 0), a.optInt("i", 0)));
 
                 addHeader("Usage Log:");
                 for (JSONObject entry : entries) {
+                    int type = entry.optInt("d");
                     String info = String.format(
                             "#%d: %s\n• Device: %s\n• Energy: %dkJ, Voltage: %d",
                             entry.optInt("i"),
                             formatDateTime(entry.optString("t")),
-                            deviceTypeName(entry.optInt("d")),
+                            deviceTypeName(type),
                             entry.optInt("e"),
                             entry.optInt("v")
                     );
-                    addListItem(info);
+
+                    TextView item = new TextView(this);
+                    item.setText(info);
+                    item.setTextSize(15f);
+                    item.setPadding(24, 8, 0, 8);
+
+                    if (type == 2) {  // Charger → green
+                        item.setBackgroundColor(isDark ? 0xFF227733 : 0xFFAAFFAA);
+                        item.setTextColor(isDark ? 0xFFFFFFFF : 0xFF000000);
+                    } else if (type == 1) {  // Robot → blue
+                        item.setBackgroundColor(isDark ? 0xFF224477 : 0xFFADD8E6);
+                        item.setTextColor(isDark ? 0xFFFFFFFF : 0xFF000000);
+                    }
+
+                    resultLayout.addView(item);
                 }
             }
-
 
         } catch (Exception e) {
             showMessage("Invalid JSON:\n" + rawJson);
