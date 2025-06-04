@@ -53,11 +53,18 @@ public class MainActivity extends Activity {
         Button btnInit = findViewById(R.id.btnInit);
         Button btnStatus = findViewById(R.id.btnStatus);
         Button btnMockRobot = findViewById(R.id.btnMockRobot);
+        Button btnViewLogs = findViewById(R.id.btnViewLogs);
+
 
         btnCharged.setOnClickListener(v -> writeChargerSession());
         btnInit.setOnClickListener(v -> promptForSerialNumber());
         btnStatus.setOnClickListener(v -> promptForNoteType());
         btnMockRobot.setOnClickListener(v -> writeRobotSession());
+
+        btnViewLogs.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, LogActivity.class);
+            startActivity(intent);
+        });
     }
 
     @Override
@@ -74,6 +81,7 @@ public class MainActivity extends Activity {
             nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, null);
         }
     }
+
 
 
     @Override
@@ -122,6 +130,10 @@ public class MainActivity extends Activity {
         try {
             JSONObject obj = new JSONObject(rawJson);
             lastJson = obj;
+            // Avoid logging duplicate reads
+            if (!obj.toString().equals(LogHelper.getLastLoggedRaw())) {
+                LogHelper.log(this, "read", obj);
+            }
 
             addLabel("Serial Number", obj.optString("sn"));
             addLabel("First Use", formatDateTime(obj.optString("fu")));
@@ -332,6 +344,11 @@ public class MainActivity extends Activity {
                 ndef.close();
                 showMessage("Write successful.");
                 parseAndDisplayJson(data);
+                try {
+                    JSONObject written = new JSONObject(data);
+                    LogHelper.log(this, "write", written);
+                } catch (Exception ignore) {}
+
             } else {
                 showMessage("Tag is not writable.");
             }
