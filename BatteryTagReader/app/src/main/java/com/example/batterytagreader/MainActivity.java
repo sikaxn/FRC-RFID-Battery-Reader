@@ -73,11 +73,11 @@ public class MainActivity extends Activity {
             startActivity(intent);
 
         });
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            if (!isInLockTaskMode()) {
-                startLockTask();
-            }
-        }
+        //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+        //    if (!isInLockTaskMode()) {
+        //        startLockTask();
+         //   }
+        //}
 
     }
 
