@@ -16,13 +16,19 @@ public class LogHelper {
     private static final String PREF_NAME = "BatteryTagLog";
     private static final String LOG_KEY = "log_data";
     private static JSONObject lastLogged = null;
+    private static final String LAST_LOGGED_KEY = "last_logged_raw";
+
 
     public static void log(Context context, String type, JSONObject data) {
-        if (data == null || data.toString().equals(lastLogged != null ? lastLogged.toString() : "")) return;
-        lastLogged = data;
+        if (data == null) return;
+
+        String raw = data.toString();
+
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        String lastRaw = prefs.getString(LAST_LOGGED_KEY, null);
+        if (raw.equals(lastRaw)) return;  // skip duplicate
 
         try {
-            SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
             JSONArray log = new JSONArray(prefs.getString(LOG_KEY, "[]"));
 
             JSONObject entry = new JSONObject();
@@ -31,7 +37,11 @@ public class LogHelper {
             entry.put("data", data);
 
             log.put(entry);
-            prefs.edit().putString(LOG_KEY, log.toString()).apply();
+
+            prefs.edit()
+                    .putString(LOG_KEY, log.toString())
+                    .putString(LAST_LOGGED_KEY, raw)
+                    .apply();
         } catch (Exception ignored) {}
     }
 
@@ -48,8 +58,9 @@ public class LogHelper {
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
                 .edit().remove(LOG_KEY).apply();
     }
-    public static String getLastLoggedRaw() {
-        return lastLogged != null ? lastLogged.toString() : "";
+    public static String getLastLoggedRaw(Context context) {
+        return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                .getString(LAST_LOGGED_KEY, null);
     }
 
 }

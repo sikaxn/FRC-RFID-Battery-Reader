@@ -131,9 +131,10 @@ public class MainActivity extends Activity {
             JSONObject obj = new JSONObject(rawJson);
             lastJson = obj;
             // Avoid logging duplicate reads
-            if (!obj.toString().equals(LogHelper.getLastLoggedRaw())) {
+            if (!obj.toString().equals(LogHelper.getLastLoggedRaw(this))) {
                 LogHelper.log(this, "read", obj);
             }
+
 
             addLabel("Serial Number", obj.optString("sn"));
             addLabel("First Use", formatDateTime(obj.optString("fu")));
@@ -224,7 +225,11 @@ public class MainActivity extends Activity {
             lastJson.put("cc", cc + 1);
 
 
-            writeToTag(lastJson.toString());
+            if (writeToTag(lastJson.toString())) {
+                LogHelper.log(this, "write", lastJson);
+            }
+
+
 
         } catch (Exception e) {
             showMessage("Failed to write charger entry.");
@@ -262,7 +267,12 @@ public class MainActivity extends Activity {
             lastJson.put("u", u);
 
 
-            writeToTag(lastJson.toString());
+            if (writeToTag(lastJson.toString())) {
+                LogHelper.log(this, "write", lastJson);
+            }
+
+
+
         } catch (Exception e) {
             showMessage("Failed to mock robot session.");
         }
@@ -286,7 +296,11 @@ public class MainActivity extends Activity {
                         lastJson = json;
 
 
-                        writeToTag(json.toString());
+                        if (writeToTag(lastJson.toString())) {
+                            LogHelper.log(this, "write", lastJson);
+                        }
+
+
                     } catch (Exception e) {
                         showMessage("Error creating battery record.");
                     }
@@ -306,23 +320,24 @@ public class MainActivity extends Activity {
                         lastJson.put("n", which);
 
 
-                        writeToTag(lastJson.toString());
+                        if (writeToTag(lastJson.toString())) {
+                            LogHelper.log(this, "write", lastJson);
+                        }
+
+
                     } catch (Exception e) {
                         showMessage("Failed to set note.");
                     }
                 }).show();
     }
 
-    private void writeToTag(String data) {
-        if (nfcAdapter == null) {
-            showMessage("NFC is not available on this device.");
-            return;
+    private boolean writeToTag(String data) {
+        if (nfcAdapter == null || lastTag == null) {
+            showMessage("No tag or NFC unavailable.");
+            return false;
         }
+
         try {
-            if (lastTag == null) {
-                showMessage("No tag detected.");
-                return;
-            }
             Ndef ndef = Ndef.get(lastTag);
             if (ndef != null && ndef.isWritable()) {
                 ndef.connect();
@@ -339,23 +354,24 @@ public class MainActivity extends Activity {
                         new byte[0],
                         payload
                 );
-                NdefMessage message = new NdefMessage(new NdefRecord[]{record});
-                ndef.writeNdefMessage(message);
-                ndef.close();
-                showMessage("Write successful.");
-                parseAndDisplayJson(data);
-                try {
-                    JSONObject written = new JSONObject(data);
-                    LogHelper.log(this, "write", written);
-                } catch (Exception ignore) {}
 
+                ndef.writeNdefMessage(new NdefMessage(new NdefRecord[]{record}));
+                ndef.close();
+
+                showMessage("Write successful.");
+                parseAndDisplayJson(data);  // Will log the read
+
+                return true;
             } else {
-                showMessage("Tag is not writable.");
+                showMessage("Tag not writable.");
             }
         } catch (Exception e) {
-            showMessage("Failed to write: " + e.getMessage());
+            showMessage("Write error: " + e.getMessage());
         }
+
+        return false;
     }
+
 
     private String currentTimestamp() {
         return new SimpleDateFormat("yyMMddHHmm", Locale.US).format(new Date());
