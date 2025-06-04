@@ -25,6 +25,10 @@ import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 
 
@@ -143,9 +147,17 @@ public class MainActivity extends Activity {
 
             JSONArray usage = obj.optJSONArray("u");
             if (usage != null && usage.length() > 0) {
-                addHeader("Usage Log:");
+                // Convert to list for sorting
+                List<JSONObject> entries = new ArrayList<>();
                 for (int i = 0; i < usage.length(); i++) {
-                    JSONObject entry = usage.getJSONObject(i);
+                    entries.add(usage.getJSONObject(i));
+                }
+
+                // Sort descending by "i" (entry ID)
+                entries.sort((a, b) -> Integer.compare(b.optInt("i", 0), a.optInt("i", 0)));
+
+                addHeader("Usage Log:");
+                for (JSONObject entry : entries) {
                     String info = String.format(
                             "#%d: %s\n• Device: %s\n• Energy: %dkJ, Voltage: %d",
                             entry.optInt("i"),
@@ -157,6 +169,8 @@ public class MainActivity extends Activity {
                     addListItem(info);
                 }
             }
+
+
         } catch (Exception e) {
             showMessage("Invalid JSON:\n" + rawJson);
         }
