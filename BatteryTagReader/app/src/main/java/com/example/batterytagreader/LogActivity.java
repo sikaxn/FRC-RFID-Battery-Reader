@@ -52,6 +52,15 @@ public class LogActivity extends Activity {
             recreate();
         });
         buttonRow.addView(clear);
+        Button exitKiosk = new Button(this);
+        exitKiosk.setText("Exit Kiosk");
+        exitKiosk.setOnClickListener(v -> {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                stopLockTask();
+            }
+            finishAffinity(); // Optional: exit the app entirely
+        });
+        root.addView(exitKiosk, 0); // Add to top
 
         root.addView(buttonRow);
 
