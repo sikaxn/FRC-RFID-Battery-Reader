@@ -7,11 +7,12 @@
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="Batt Chk"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+        android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"
         android:lockTaskMode="if_whitelisted"
         android:launchMode="singleTask"
         android:allowBackup="true"
         android:fullBackupContent="true"
+
         >
 
         <activity

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -17,6 +18,9 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.Locale;
+import android.util.TypedValue;
+import androidx.core.content.ContextCompat;
+
 
 public class LogActivity extends Activity {
 
@@ -28,22 +32,59 @@ public class LogActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(16, 16, 16, 16);
         setContentView(root);
+// ===== Row 1: Exit / Pin / Unpin =====
+        LinearLayout row1 = new LinearLayout(this);
+        row1.setOrientation(LinearLayout.HORIZONTAL);
+        row1.setGravity(Gravity.CENTER);
+        row1.setPadding(0, 0, 0, 16);
 
-        // Top buttons
-        LinearLayout buttonRow = new LinearLayout(this);
-        buttonRow.setOrientation(LinearLayout.HORIZONTAL);
-        buttonRow.setGravity(Gravity.CENTER);
-        buttonRow.setPadding(0, 0, 0, 16);
+        LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+
+        Button exitBtn = new Button(this);
+        exitBtn.setText("Exit");
+        exitBtn.setOnClickListener(v -> {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                stopLockTask();
+            }
+            finishAffinity(); // Optional: exit the app entirely
+        });
+        row1.addView(exitBtn, btnParams);
+
+        Button pinBtn = new Button(this);
+        pinBtn.setText("Pin");
+        pinBtn.setOnClickListener(v -> {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                startLockTask();
+            }
+        });
+        row1.addView(pinBtn, btnParams);
+
+        Button unpinBtn = new Button(this);
+        unpinBtn.setText("Unpin");
+        unpinBtn.setOnClickListener(v -> {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                stopLockTask();
+            }
+        });
+        row1.addView(unpinBtn, btnParams);
+
+        root.addView(row1);
+
+// ===== Row 2: Export JSON / Export CSV / Clear =====
+        LinearLayout row2 = new LinearLayout(this);
+        row2.setOrientation(LinearLayout.HORIZONTAL);
+        row2.setGravity(Gravity.CENTER);
+        row2.setPadding(0, 0, 0, 16);
 
         Button exportJson = new Button(this);
         exportJson.setText("Export JSON");
         exportJson.setOnClickListener(v -> exportFile("log.json", "application/json", true));
-        buttonRow.addView(exportJson);
+        row2.addView(exportJson, btnParams);
 
         Button exportCsv = new Button(this);
         exportCsv.setText("Export CSV");
         exportCsv.setOnClickListener(v -> exportFile("log.csv", "text/csv", false));
-        buttonRow.addView(exportCsv);
+        row2.addView(exportCsv, btnParams);
 
         Button clear = new Button(this);
         clear.setText("Clear");
@@ -51,18 +92,11 @@ public class LogActivity extends Activity {
             LogHelper.clearLog(this);
             recreate();
         });
-        buttonRow.addView(clear);
-        Button exitKiosk = new Button(this);
-        exitKiosk.setText("Exit Kiosk");
-        exitKiosk.setOnClickListener(v -> {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                stopLockTask();
-            }
-            finishAffinity(); // Optional: exit the app entirely
-        });
-        root.addView(exitKiosk, 0); // Add to top
+        row2.addView(clear, btnParams);
 
-        root.addView(buttonRow);
+        root.addView(row2);
+
+
 
         // Scrollable log entries
         ScrollView scroll = new ScrollView(this);
@@ -87,8 +121,18 @@ public class LogActivity extends Activity {
             tv.setText(info);
             tv.setTextSize(15f);
             tv.setPadding(24, 20, 24, 20);
-            tv.setBackgroundColor(0xFFEFEFEF);
             tv.setTextIsSelectable(true);
+
+            // Dynamically resolve text color based on theme
+            TypedValue tvColor = new TypedValue();
+            getTheme().resolveAttribute(android.R.attr.textColorPrimary, tvColor, true);
+            tv.setTextColor(ContextCompat.getColor(this, tvColor.resourceId));
+
+            // Optional: use theme background
+            TypedValue bgColor = new TypedValue();
+            if (getTheme().resolveAttribute(android.R.attr.colorBackgroundFloating, bgColor, true)) {
+                tv.setBackgroundColor(ContextCompat.getColor(this, bgColor.resourceId));
+            }
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -99,7 +143,7 @@ public class LogActivity extends Activity {
         }
     }
 
-    private void exportFile(String filename, String mime, boolean asJson) {
+        private void exportFile(String filename, String mime, boolean asJson) {
         try {
             File file = new File(getCacheDir(), filename);
             FileWriter writer = new FileWriter(file);
