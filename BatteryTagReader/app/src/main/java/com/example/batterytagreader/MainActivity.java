@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-
+import java.util.TimeZone;
 
 
 public class MainActivity extends Activity {
@@ -443,8 +443,11 @@ public class MainActivity extends Activity {
 
 
     private String currentTimestamp() {
-        return new SimpleDateFormat("yyMMddHHmm", Locale.US).format(new Date());
+        SimpleDateFormat utcFormat = new SimpleDateFormat("yyMMddHHmm", Locale.US);
+        utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return utcFormat.format(new Date());
     }
+
 
     private void showMessage(String message) {
         resultLayout.removeAllViews();
@@ -496,14 +499,23 @@ public class MainActivity extends Activity {
 
     private String formatDateTime(String raw) {
         if (raw.length() != 10) return raw;
-        return String.format("20%s-%s-%s %s:%s",
-                raw.substring(0, 2),
-                raw.substring(2, 4),
-                raw.substring(4, 6),
-                raw.substring(6, 8),
-                raw.substring(8, 10)
-        );
+
+        try {
+            // Parse raw UTC timestamp
+            SimpleDateFormat utcFormat = new SimpleDateFormat("yyMMddHHmm", Locale.US);
+            utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = utcFormat.parse(raw);
+
+            // Format to local time
+            SimpleDateFormat localFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+            localFormat.setTimeZone(TimeZone.getDefault());
+            return localFormat.format(date);
+
+        } catch (Exception e) {
+            return raw;
+        }
     }
+
 
     private String getTextFromPayload(byte[] payload) {
         try {

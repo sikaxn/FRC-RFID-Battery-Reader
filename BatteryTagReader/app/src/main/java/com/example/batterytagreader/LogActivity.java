@@ -17,7 +17,11 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
+
 import android.util.TypedValue;
 import androidx.core.content.ContextCompat;
 
@@ -143,7 +147,7 @@ public class LogActivity extends Activity {
         }
     }
 
-        private void exportFile(String filename, String mime, boolean asJson) {
+    private void exportFile(String filename, String mime, boolean asJson) {
         try {
             File file = new File(getCacheDir(), filename);
             FileWriter writer = new FileWriter(file);
@@ -155,12 +159,31 @@ public class LogActivity extends Activity {
                 writer.write("Time,Type,Data\n");
                 for (int i = 0; i < log.length(); i++) {
                     JSONObject entry = log.getJSONObject(i);
-                    writer.write(String.format("\"%s\",\"%s\",\"%s\"\n",
-                            entry.getString("time"),
-                            entry.getString("type"),
-                            entry.getJSONObject("data").toString().replace("\"", "'")));
+                    String utcString = entry.optString("time", "");
+                    String localTime = utcString;
+
+                    try {
+                        SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
+                        utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+                        SimpleDateFormat localFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+                        localFormat.setTimeZone(TimeZone.getDefault());
+
+                        Date parsedUtcDate = utcFormat.parse(utcString);
+                        if (parsedUtcDate != null) {
+                            localTime = localFormat.format(parsedUtcDate);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();  // fallback to raw UTC string
+                    }
+
+                    String type = entry.optString("type", "");
+                    String data = entry.optJSONObject("data").toString().replace("\"", "'");
+
+                    writer.write(String.format("\"%s\",\"%s\",\"%s\"\n", localTime, type, data));
                 }
             }
+
             writer.close();
 
             Intent share = new Intent(Intent.ACTION_SEND);

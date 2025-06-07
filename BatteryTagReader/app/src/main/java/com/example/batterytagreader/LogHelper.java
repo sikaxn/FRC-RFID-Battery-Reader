@@ -32,7 +32,10 @@ public class LogHelper {
             JSONArray log = new JSONArray(prefs.getString(LOG_KEY, "[]"));
 
             JSONObject entry = new JSONObject();
-            entry.put("time", new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date()));
+            SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
+            utcFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            entry.put("time", utcFormat.format(new Date()));
+
             entry.put("type", type);
             entry.put("data", data);
 
