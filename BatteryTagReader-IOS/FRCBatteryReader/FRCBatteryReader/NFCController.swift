@@ -1,10 +1,3 @@
-//
-//  NFCController.swift
-//  FRCBatteryReader
-//
-//  Created by Nathan on 2025-09-13.
-//
-
 import Foundation
 import CoreNFC
 import UIKit
@@ -12,87 +5,140 @@ import UIKit
 final class NFCController: NSObject, ObservableObject {
     @Published var payload: BatteryPayload? = nil
 
-    // Separate sessions for read vs write
-    private var readSession: NFCNDEFReaderSession?
-    private var writeSession: NFCTagReaderSession?
+    // Keep strong references
+    var readSession: NFCNDEFReaderSession?
+    var writeSession: NFCTagReaderSession?
 
-    // Write state
+    // Pending write state
     private var pendingPayload: BatteryPayload?
     private var pendingOnLogged: ((String) -> Void)?
+    // Raw read logging callback
+    var onReadRaw: ((String) -> Void)?
+
+    // Prevent overlapping sessions
+    private var nfcBusy = false
 }
 
 // MARK: - Public API
 extension NFCController {
+    // READ
     func begin() {
-        guard NFCNDEFReaderSession.readingAvailable else { return }
-        readSession = NFCNDEFReaderSession(delegate: self, queue: .main, invalidateAfterFirstRead: false)
-        readSession?.alertMessage = "Hold battery to phone"
-        readSession?.begin()
+        guard UIApplication.shared.applicationState == .active else { return }
+        guard NFCNDEFReaderSession.readingAvailable else {
+            self.presentHint("NFC not available on this device.")
+            return
+        }
+        guard !nfcBusy else { return }
+
+        // If a write session is up, end it before read
+        writeSession?.invalidate(); writeSession = nil
+        readSession?.invalidate(); readSession = nil
+
+        let s = NFCNDEFReaderSession(delegate: self, queue: .main, invalidateAfterFirstRead: true)
+        s.alertMessage = "Hold battery to phone"
+        readSession = s
+        nfcBusy = true
+        s.begin()
     }
 
+    // WRITE
     func write(_ p: BatteryPayload, onLogged: @escaping (String)->Void) {
-        // Save state; start tag session (required for writing)
-        guard NFCTagReaderSession.readingAvailable else { return }
+        guard UIApplication.shared.applicationState == .active else { return }
+        guard NFCTagReaderSession.readingAvailable else {
+            self.presentHint("NFC not available on this device.")
+            return
+        }
+        // Avoid overlapping sessions
+        if nfcBusy { return }
+        nfcBusy = true
+
+        // End any running sessions first
+        readSession?.invalidate(); readSession = nil
+        writeSession?.invalidate(); writeSession = nil
+
+        // Save state to complete after detection
         pendingPayload = p
         pendingOnLogged = onLogged
 
-        writeSession = NFCTagReaderSession(pollingOption: [.iso14443, .iso15693, .iso18092], delegate: self, queue: .main)
-        writeSession?.alertMessage = "Hold near the tag to write"
-        writeSession?.begin()
+        // Give CoreNFC a brief moment to release resources before starting a new session
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            guard let s = NFCTagReaderSession(pollingOption: [.iso14443], delegate: self, queue: .main) else {
+                self.nfcBusy = false
+                return
+            }
+            s.alertMessage = "Hold near the tag to write"
+            self.writeSession = s
+            s.begin()
+        }
+    }
+    
+    /// Use this if you want to explicitly re-present the system “Ready to scan” sheet.
+    func restartWritePrompt() {
+        guard let payload = pendingPayload, let onLogged = pendingOnLogged else { return }
+        write(payload, onLogged: onLogged)
     }
 }
 
-// MARK: - NFCNDEFReaderSessionDelegate (READ)
+// MARK: - READ delegate
 extension NFCController: NFCNDEFReaderSessionDelegate {
+    func readerSessionDidBecomeActive(_ session: NFCNDEFReaderSession) {
+        // Mark busy while the sheet is up
+        nfcBusy = true
+    }
+
     func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
-        // Read session ended or failed — typically user removed device or canceled
-        // You can log error.localizedDescription if useful
+        readSession = nil
+        nfcBusy = false
+        // Many invalidations are user-cancel or timeout; no alert needed here
     }
 
     func readerSession(_ session: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {
         guard let rec = messages.first?.records.first,
               let json = NFCController.textFrom(record: rec) else { return }
-
+        // Log raw read prior to decode
+        self.onReadRaw?(json)
         DispatchQueue.main.async {
             if let p = try? JSONDecoder().decode(BatteryPayload.self, from: Data(json.utf8)) {
                 self.payload = p
             }
         }
+        // Close the sheet after one successful parse
+        session.invalidate()
+        nfcBusy = false
     }
 }
 
-// MARK: - NFCTagReaderSessionDelegate (WRITE)
+// MARK: - WRITE delegate
 extension NFCController: NFCTagReaderSessionDelegate {
     func tagReaderSessionDidBecomeActive(_ session: NFCTagReaderSession) {
-        // Session ready
+        nfcBusy = true
     }
 
     func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error) {
-        // Write session ended or failed
+        writeSession = nil
         pendingPayload = nil
         pendingOnLogged = nil
+        nfcBusy = false
     }
 
     func tagReaderSession(_ session: NFCTagReaderSession, didDetect tags: [NFCTag]) {
         guard let tag = tags.first else { return }
 
-        // Connect to tag
         session.connect(to: tag) { connectError in
             if let connectError = connectError {
                 session.invalidate(errorMessage: "Connection failed: \(connectError.localizedDescription)")
                 return
             }
 
-            // Convert to an NDEF-capable tag
+            // Convert to NDEF-capable tag
             let ndefTag: NFCNDEFTag?
             switch tag {
-            case .iso7816(let t):   ndefTag = t
-            case .iso15693(let t):  ndefTag = t
-            case .miFare(let t):    ndefTag = t
-            case .feliCa(let t):    ndefTag = t
-            @unknown default:       ndefTag = nil
+            case .miFare(let t):   ndefTag = t     // Type 2 (NTAG/Ultralight) shows up here
+            case .iso7816(let t):  ndefTag = t
+            case .iso15693(let t): ndefTag = t
+            case .feliCa(let t):   ndefTag = t
+            @unknown default:      ndefTag = nil
             }
-
             guard let ndefTag = ndefTag else {
                 session.invalidate(errorMessage: "Tag does not support NDEF.")
                 return
@@ -103,17 +149,16 @@ extension NFCController: NFCTagReaderSessionDelegate {
                     session.invalidate(errorMessage: "Status error: \(statusError.localizedDescription)")
                     return
                 }
-
                 guard status == .readWrite else {
                     session.invalidate(errorMessage: "Tag is not writable.")
                     return
                 }
-
                 guard let payloadToWrite = self.pendingPayload else {
                     session.invalidate(errorMessage: "Nothing to write.")
                     return
                 }
 
+                // Build message (single Text record with JSON)
                 let json = (try? String(data: JSONEncoder().encode(payloadToWrite), encoding: .utf8)) ?? "{}"
                 guard let rec = NFCNDEFPayload.wellKnownTypeTextPayload(string: json, locale: Locale(identifier: "en")) else {
                     session.invalidate(errorMessage: "Failed to create NDEF record.")
@@ -127,15 +172,15 @@ extension NFCController: NFCTagReaderSessionDelegate {
                     } else {
                         session.alertMessage = "Write successful"
                         session.invalidate()
-
                         DispatchQueue.main.async {
                             self.payload = payloadToWrite
                             self.pendingOnLogged?(json)
                         }
                     }
-                    // Clear state either way
+                    // Clear write state
                     self.pendingPayload = nil
                     self.pendingOnLogged = nil
+                    self.nfcBusy = false
                 }
             }
         }
@@ -148,7 +193,6 @@ extension NFCController {
         guard record.typeNameFormat == .nfcWellKnown,
               let typeString = String(data: record.type, encoding: .utf8),
               typeString == "T" else { return nil }
-
         let payload = record.payload
         guard payload.count > 0 else { return nil }
         let status = payload[0]
@@ -157,9 +201,14 @@ extension NFCController {
         let textData = payload.dropFirst(1 + langLen)
         return String(data: textData, encoding: .utf8)
     }
+
+    private func presentHint(_ title: String, msg: String = "") {
+        let ac = UIAlertController(title: title, message: msg.isEmpty ? nil : msg, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        UIApplication.shared.keyWindowTop?.present(ac, animated: true)
+    }
 }
 
-// MARK: - Top-most VC helper
 extension UIApplication {
     var keyWindowTop: UIViewController? {
         let scenes = self.connectedScenes.compactMap { $0 as? UIWindowScene }
