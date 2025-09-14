@@ -37,6 +37,11 @@ struct LogsView: View {
                         }
                     }
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Clear Logs") {
+                        store.rawLog.removeAll()
+                    }
+                }
             }
         }
     }
