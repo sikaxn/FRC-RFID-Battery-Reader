@@ -498,20 +498,33 @@ public class MainActivity extends Activity {
     }
 
     private String formatDateTime(String raw) {
+        // Guard nulls/whitespace first
+        if (raw == null) return "Date not available";
+        raw = raw.trim();
+
+        // If the JSON date is all zeros (e.g., "0000000000" or even just "0"), show N/A
+        if (raw.isEmpty() || raw.matches("^0+$")) {
+            return "Date not available";
+        }
+
+        // Keep the current fallback for non-standard lengths
         if (raw.length() != 10) return raw;
 
         try {
-            // Parse raw UTC timestamp
-            SimpleDateFormat utcFormat = new SimpleDateFormat("yyMMddHHmm", Locale.US);
-            utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-            Date date = utcFormat.parse(raw);
+            // Parse raw UTC timestamp encoded as "yyMMddHHmm"
+            java.text.SimpleDateFormat utcFormat =
+                    new java.text.SimpleDateFormat("yyMMddHHmm", java.util.Locale.US);
+            utcFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            java.util.Date date = utcFormat.parse(raw);
 
             // Format to local time
-            SimpleDateFormat localFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
-            localFormat.setTimeZone(TimeZone.getDefault());
+            java.text.SimpleDateFormat localFormat =
+                    new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault());
+            localFormat.setTimeZone(java.util.TimeZone.getDefault());
             return localFormat.format(date);
 
         } catch (Exception e) {
+            // If parsing fails for any other reason, fall back to the raw string
             return raw;
         }
     }
