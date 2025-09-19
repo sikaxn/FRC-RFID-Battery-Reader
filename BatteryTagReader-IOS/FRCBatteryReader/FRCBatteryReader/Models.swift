@@ -47,17 +47,36 @@ enum NoteType: Int, CaseIterable, Identifiable, Codable {
 
 // MARK: - Time helpers
 
+/// Current timestamp in **UTC** as numeric **YYMMDDHHMM** (all digits).
 func currentTimestampUTC() -> String {
-    let df = ISO8601DateFormatter()
-    df.timeZone = TimeZone(secondsFromGMT: 0)
-    df.formatOptions = [.withInternetDateTime, .withFractionalSeconds] // compact, stable
-    return df.string(from: Date())
+    let tzUTC = TimeZone(secondsFromGMT: 0)!
+    var cal = Calendar(identifier: .gregorian)
+    cal.timeZone = tzUTC
+    let c = cal.dateComponents([.year, .month, .day, .hour, .minute], from: Date())
+    let yy = (c.year ?? 2000) % 100
+    let mo = c.month ?? 0
+    let dd = c.day ?? 0
+    let hh = c.hour ?? 0
+    let mm = c.minute ?? 0
+    return String(format: "%02d%02d%02d%02d%02d", yy, mo, dd, hh, mm)
 }
 
-// “0000…“ handling + pretty local rendering
+/// Render either our numeric **YYMMDDHHMM** or legacy ISO string into local user time.
+/// If value represents all zeros, returns "Date not available".
 func formatUTCStringToLocal(_ s: String) -> String {
     if isAllZeroTimestamp(s) { return "Date not available" }
 
+    // Prefer numeric YYMMDDHHMM (interpreted as UTC) → local display
+    if let d = parseYYMMDDHHMMAsUTC(s) {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        f.locale = .current
+        f.timeZone = .current
+        return f.string(from: d)
+    }
+
+    // Fallback: legacy ISO-8601 parsing
     let iso = ISO8601DateFormatter()
     iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     if let d = iso.date(from: s) {
@@ -67,8 +86,6 @@ func formatUTCStringToLocal(_ s: String) -> String {
         f.locale = .current
         return f.string(from: d)
     }
-
-    // Try without fractional seconds
     let isoNoFrac = ISO8601DateFormatter()
     if let d2 = isoNoFrac.date(from: s) {
         let f = DateFormatter()
@@ -80,10 +97,33 @@ func formatUTCStringToLocal(_ s: String) -> String {
     return s
 }
 
+/// Heuristic: treat strings of all '0' (optionally with separators) as unavailable.
 func isAllZeroTimestamp(_ s: String) -> Bool {
     let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return false }
-    for ch in trimmed { if ch != "0" && ch != ":" && ch != "-" && ch != " " && ch != "T" && ch != "Z" { return false } }
-    // if nothing but 0s and separators
-    return trimmed.replacingOccurrences(of: "0", with: "").trimmingCharacters(in: .whitespacesAndNewlines).count < 6
+    // Exact numeric all-zero (e.g., "0000000000")
+    if trimmed.allSatisfy({ $0 == "0" }) { return true }
+    // Generic: if the string contains only digits and separators, and all digits are zero
+    let digits = trimmed.compactMap { $0.isNumber ? $0 : nil }
+    if digits.isEmpty { return false }
+    return digits.allSatisfy { $0 == "0" }
+}
+
+/// Parse numeric YYMMDDHHMM as **UTC** date; returns nil if format invalid.
+private func parseYYMMDDHHMMAsUTC(_ s: String) -> Date? {
+    let chars = Array(s)
+    guard chars.count == 10, chars.allSatisfy({ $0.isNumber }) else { return nil }
+    guard let yy = Int(String(chars[0...1])),
+          let mo = Int(String(chars[2...3])),
+          let dd = Int(String(chars[4...5])),
+          let hh = Int(String(chars[6...7])),
+          let mm = Int(String(chars[8...9])) else { return nil }
+    var comps = DateComponents()
+    comps.timeZone = TimeZone(secondsFromGMT: 0)
+    comps.year = 2000 + yy
+    comps.month = mo
+    comps.day = dd
+    comps.hour = hh
+    comps.minute = mm
+    return Calendar(identifier: .gregorian).date(from: comps)
 }

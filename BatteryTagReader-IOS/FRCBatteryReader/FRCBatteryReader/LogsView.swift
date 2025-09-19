@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct LogsView: View {
     @EnvironmentObject var store: LogStore
@@ -33,6 +34,7 @@ struct LogsView: View {
                         }
                         .padding(.vertical, 6)
                     }
+                    .onDelete(perform: delete)
                 }
             }
             .navigationTitle("Logs")
@@ -40,7 +42,19 @@ struct LogsView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Close") { dismiss() }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        let json = store.exportJSONString()
+                        // Present share sheet with the JSON text
+                        let av = UIActivityViewController(activityItems: [json], applicationActivities: nil)
+                        if let top = UIApplication.shared.keyWindowTop {
+                            top.present(av, animated: true)
+                        }
+                    } label: {
+                        Label("Export", systemImage: "square.and.arrow.up")
+                    }
+                    .disabled(store.items.isEmpty)
+
                     Button(role: .destructive) {
                         store.clear()
                     } label: {
@@ -50,5 +64,9 @@ struct LogsView: View {
                 }
             }
         }
+    }
+
+    private func delete(at offsets: IndexSet) {
+        store.delete(at: offsets)
     }
 }

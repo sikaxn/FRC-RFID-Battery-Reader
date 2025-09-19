@@ -44,4 +44,28 @@ final class LogStore: ObservableObject {
         items.removeAll()
         persist()
     }
+
+    func delete(at offsets: IndexSet) {
+        items.remove(atOffsets: offsets)
+        persist()
+    }
+
+    func exportJSONString(pretty: Bool = true) -> String {
+        let enc = JSONEncoder()
+        if #available(iOS 15.0, *) {
+            enc.outputFormatting = pretty ? [.prettyPrinted, .withoutEscapingSlashes] : []
+        } else {
+            enc.outputFormatting = pretty ? [.prettyPrinted] : []
+        }
+        enc.dateEncodingStrategy = .iso8601
+        struct Out: Codable {
+            let id: UUID
+            let when: Date
+            let kind: String
+            let raw: String
+        }
+        let out = items.map { Out(id: $0.id, when: $0.when, kind: $0.kind.rawValue.uppercased(), raw: $0.raw) }
+        if let data = try? enc.encode(out), let s = String(data: data, encoding: .utf8) { return s }
+        return "[]"
+    }
 }
