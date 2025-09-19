@@ -328,15 +328,19 @@ class App(tk.Tk):
 
     def _run_reader(self, fn, done=None, label="Working..."):
         self.status.set(label + " Present a card…")
+
         def worker():
             try:
                 with_reader(fn)
-                self.after(0, lambda: done() if done else None)
-            except Exception as e:
-                self.after(0, lambda: messagebox.showerror("Error", str(e)))
+                self.after(0, (lambda: done()) if callable(done) else (lambda: None))
+            except Exception as ex:
+                err = str(ex)  # bind value so lambda doesn't reference a cleared exception
+                self.after(0, lambda m=err: messagebox.showerror("Error", m))
             finally:
                 self.after(0, lambda: self.status.set("Ready."))
+
         threading.Thread(target=worker, daemon=True).start()
+
 
 if __name__ == "__main__":
     App().mainloop()
