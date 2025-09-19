@@ -1,3 +1,8 @@
+//
+//  NFCController.swift
+//  FRCBatteryReader
+//
+
 import Foundation
 import CoreNFC
 import UIKit
@@ -6,9 +11,8 @@ import OSLog
 final class NFCController: NSObject, ObservableObject {
     @Published var payload: BatteryPayload? = nil
 
-    // Keep strong references
+    // Single CoreNFC session (we use NDEF for both read and write)
     var readSession: NFCNDEFReaderSession?
-    var writeSession: NFCTagReaderSession?
 
     // Pending write state
     private var pendingPayload: BatteryPayload?
@@ -30,10 +34,12 @@ extension NFCController {
         DispatchQueue.main.async {
             print("[NFC] begin() invoked")
             self.logger.debug("begin() invoked")
-            // Ensure we are in pure read mode
+
+            // Ensure pure read mode
             self.isWriting = false
             self.pendingPayload = nil
             self.pendingOnLogged = nil
+
             guard UIApplication.shared.applicationState == .active else { return }
             guard NFCNDEFReaderSession.readingAvailable else {
                 self.presentHint("NFC not available on this device.")
@@ -41,11 +47,11 @@ extension NFCController {
             }
             guard !self.nfcBusy else { return }
 
-            // End any running sessions first
-            self.writeSession?.invalidate(); self.writeSession = nil
-            self.readSession?.invalidate(); self.readSession = nil
+            // End any running session first
+            self.readSession?.invalidate()
+            self.readSession = nil
 
-            let s = NFCNDEFReaderSession(delegate: self, queue: .main, invalidateAfterFirstRead: true)
+            let s = NFCNDEFReaderSession(delegate: self, queue: .main, invalidateAfterFirstRead: false)
             s.alertMessage = "Hold battery to phone"
             self.readSession = s
             self.nfcBusy = true
@@ -53,11 +59,12 @@ extension NFCController {
         }
     }
 
-    // WRITE
+    // WRITE (via NDEF Reader session — compatibility mode)
     func write(_ p: BatteryPayload, onLogged: @escaping (String)->Void) {
         DispatchQueue.main.async {
             print("[NFC] write() invoked (NDEF session)")
             self.logger.debug("write() invoked (NDEF)")
+
             guard UIApplication.shared.applicationState == .active else { return }
             guard NFCNDEFReaderSession.readingAvailable else {
                 self.presentHint("NFC not available on this device.")
@@ -70,15 +77,15 @@ extension NFCController {
                 return
             }
 
-            // mark state
+            // Mark write state
             self.nfcBusy = true
             self.isWriting = true
             self.pendingPayload = p
             self.pendingOnLogged = onLogged
 
-            // End any running sessions first
-            self.writeSession?.invalidate(); self.writeSession = nil
-            self.readSession?.invalidate(); self.readSession = nil
+            // End any running session first
+            self.readSession?.invalidate()
+            self.readSession = nil
 
             // Use NDEF reader session for write compatibility
             let s = NFCNDEFReaderSession(delegate: self, queue: .main, invalidateAfterFirstRead: false)
@@ -87,20 +94,19 @@ extension NFCController {
             s.begin()
         }
     }
-    
-    /// Use this if you want to explicitly re-present the system “Ready to scan” sheet.
+
+    /// Re-present the write sheet if needed
     func restartWritePrompt() {
         guard let payload = pendingPayload, let onLogged = pendingOnLogged else { return }
         write(payload, onLogged: onLogged)
     }
 }
 
-// MARK: - READ delegate
+// MARK: - NDEF delegate
 extension NFCController: NFCNDEFReaderSessionDelegate {
     func readerSessionDidBecomeActive(_ session: NFCNDEFReaderSession) {
         print("[NFC] NDEF reader active")
         logger.debug("NDEF reader active")
-        // Mark busy while the sheet is up
         nfcBusy = true
     }
 
@@ -108,23 +114,25 @@ extension NFCController: NFCNDEFReaderSessionDelegate {
         let ns = error as NSError
         print("[NFC] NDEF reader invalidated: \(ns.domain) \(ns.code) \(error.localizedDescription)")
         logger.debug("NDEF reader invalidated: \(ns.domain, privacy: .public) \(ns.code, privacy: .public)")
+        // Clear session and state
         readSession = nil
         nfcBusy = false
-        // Reset any pending write state so normal scanning works next time
         isWriting = false
         pendingPayload = nil
         pendingOnLogged = nil
-        // Many invalidations are user-cancel or timeout; no alert needed here
     }
 
+    // Passive message callback (some devices/OSes never call this; we also read via tag path below)
     func readerSession(_ session: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {
-        // If we're in write-mode, ignore passive NDEF message callbacks
-        if isWriting { return }
+        if isWriting {
+            print("[NFC] didDetectNDEFs ignored (currently writing)")
+            logger.debug("didDetectNDEFs ignored (writing)")
+            return
+        }
 
         print("[NFC] didDetectNDEFs count=\(messages.count)")
         logger.debug("didDetectNDEFs count=\(messages.count)")
 
-        // Try to find a text payload across all records in all messages
         var foundText: String? = nil
         outer: for msg in messages {
             for rec in msg.records {
@@ -139,39 +147,31 @@ extension NFCController: NFCNDEFReaderSessionDelegate {
             print("[NFC] No compatible text record (T or text/plain) found")
             logger.debug("no compatible text record")
             session.invalidate(errorMessage: "No compatible text record found on tag.")
-            nfcBusy = false
+            self.readSession = nil
+            self.nfcBusy = false
             return
         }
 
-        // Log raw read prior to decode
         self.onReadRaw?(json)
         if let data = json.data(using: .utf8), let p = try? JSONDecoder().decode(BatteryPayload.self, from: data) {
             DispatchQueue.main.async { self.payload = p }
-            // Close the sheet after one successful parse
             session.invalidate()
-            nfcBusy = false
+            self.readSession = nil
+            self.nfcBusy = false
         } else {
             print("[NFC] Text record present but JSON decode failed")
             logger.debug("text record present but JSON decode failed")
             session.invalidate(errorMessage: "Found text record but JSON was invalid.")
-            nfcBusy = false
+            self.readSession = nil
+            self.nfcBusy = false
         }
     }
 
-    // Handle write using NDEF session (compatibility mode). Called when tags are detected.
+    // Tag callback (used for BOTH write and read via NDEF session)
     func readerSession(_ session: NFCNDEFReaderSession, didDetect tags: [NFCNDEFTag]) {
         print("[NFC] didDetect NDEF tags count=\(tags.count)")
         logger.debug("didDetect NDEF tags count=\(tags.count)")
 
-        guard isWriting else {
-            // not writing: if multiple tags, prompt isolate and restart
-            if tags.count > 1 {
-                session.alertMessage = "More than one tag detected. Remove other tags and try again."
-                session.restartPolling()
-            }
-            return
-        }
-
         if tags.count > 1 {
             session.alertMessage = "More than one tag detected. Remove other tags and try again."
             session.restartPolling()
@@ -182,182 +182,133 @@ extension NFCController: NFCNDEFReaderSessionDelegate {
         session.connect(to: tag) { connectError in
             if let connectError = connectError {
                 session.invalidate(errorMessage: "Connection failed: \(connectError.localizedDescription)")
-                self.cleanupWriteState()
+                self.readSession = nil
+                self.nfcBusy = false
+                self.isWriting = false
                 return
             }
 
-            tag.queryNDEFStatus { status, capacity, statusError in
+            // WRITE MODE
+            if self.isWriting {
+                tag.queryNDEFStatus { status, capacity, statusError in
+                    if let e = statusError {
+                        session.invalidate(errorMessage: "Status error: \(e.localizedDescription)")
+                        self.cleanupWriteState(); return
+                    }
+                    switch status {
+                    case .notSupported:
+                        session.invalidate(errorMessage: "Tag is not NDEF formatted or not supported.")
+                        self.cleanupWriteState(); return
+                    case .readOnly:
+                        session.invalidate(errorMessage: "Tag is read-only.")
+                        self.cleanupWriteState(); return
+                    case .readWrite:
+                        break
+                    @unknown default:
+                        session.invalidate(errorMessage: "Unknown NDEF status.")
+                        self.cleanupWriteState(); return
+                    }
+
+                    guard let payloadToWrite = self.pendingPayload else {
+                        session.invalidate(errorMessage: "Nothing to write.")
+                        self.cleanupWriteState(); return
+                    }
+
+                    // Cap to 13 entries (Android parity)
+                    let capped = self.cappedPayload(payloadToWrite, maxEntries: MAX_RECORDS)
+
+                    // Build compact TEXT record that fits capacity
+                    guard let (msg, json) = buildMessageFittingCapacity(capped, capacity: capacity) else {
+                        session.invalidate(errorMessage: "Data too large for tag (capacity: \(capacity) bytes). Use NTAG215/216 or clear older history.")
+                        self.cleanupWriteState(); return
+                    }
+
+                    print("[NFC] writing NDEF Text record (bytes est=\(estimatedSize(of: msg, withTextPayload: json)))")
+                    self.logger.debug("writing NDEF Text record")
+
+                    tag.writeNDEF(msg) { writeError in
+                        if let writeError = writeError {
+                            session.invalidate(errorMessage: "Write failed: \(writeError.localizedDescription)")
+                        } else {
+                            session.alertMessage = "Write successful"
+                            session.invalidate()
+                            print("[NFC] write successful")
+                            self.logger.debug("write successful")
+                            DispatchQueue.main.async {
+                                self.payload = capped
+                                self.pendingOnLogged?(json)
+                            }
+                        }
+                        self.cleanupWriteState()
+                    }
+                }
+                return
+            }
+
+            // READ MODE (reliable on all devices)
+            tag.queryNDEFStatus { status, _, statusError in
                 if let e = statusError {
                     session.invalidate(errorMessage: "Status error: \(e.localizedDescription)")
-                    self.cleanupWriteState()
-                    return
-                }
-                switch status {
-                case .notSupported:
-                    session.invalidate(errorMessage: "Tag is not NDEF formatted or not supported.")
-                    self.cleanupWriteState()
-                    return
-                case .readOnly:
-                    session.invalidate(errorMessage: "Tag is read-only.")
-                    self.cleanupWriteState()
-                    return
-                case .readWrite:
-                    break
-                @unknown default:
-                    session.invalidate(errorMessage: "Unknown NDEF status.")
-                    self.cleanupWriteState()
-                    return
-                }
-
-                guard let payloadToWrite = self.pendingPayload else {
-                    session.invalidate(errorMessage: "Nothing to write.")
-                    self.cleanupWriteState()
-                    return
-                }
-
-                // Cap usage history to 13 entries (Android parity)
-                let capped = self.cappedPayload(payloadToWrite, maxEntries: 13)
-
-                // Build compact TEXT record that fits capacity
-                guard let (msg, json) = buildMessageFittingCapacity(capped, capacity: capacity) else {
-                    session.invalidate(errorMessage: "Data too large for tag (capacity: \(capacity) bytes). Use NTAG215/216 or clear older history.")
-                    self.cleanupWriteState()
-                    return
-                }
-
-                print("[NFC] writing NDEF Text record (bytes est=\(estimatedSize(of: msg, withTextPayload: json)))")
-                self.logger.debug("writing NDEF Text record")
-
-                tag.writeNDEF(msg) { writeError in
-                    if let writeError = writeError {
-                        session.invalidate(errorMessage: "Write failed: \(writeError.localizedDescription)")
-                    } else {
-                        session.alertMessage = "Write successful"
-                        session.invalidate()
-                        print("[NFC] write successful")
-                        self.logger.debug("write successful")
-                        DispatchQueue.main.async {
-                            self.payload = capped
-                            self.pendingOnLogged?(json)
-                        }
-                    }
-                    self.cleanupWriteState()
-                }
-            }
-        }
-    }
-}
-
-// MARK: - WRITE delegate
-// NOTE: Tag session delegate remains for future use; write now uses NFCNDEFReaderSession.
-extension NFCController: NFCTagReaderSessionDelegate {
-    func tagReaderSessionDidBecomeActive(_ session: NFCTagReaderSession) {
-        print("[NFC] Tag session active")
-        logger.debug("Tag session active")
-        nfcBusy = true
-    }
-
-    func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error) {
-        let ns = error as NSError
-        print("[NFC] Tag session invalidated: \(ns.domain) \(ns.code) \(error.localizedDescription)")
-        logger.debug("Tag session invalidated: \(ns.domain, privacy: .public) \(ns.code, privacy: .public)")
-        writeSession = nil
-        pendingPayload = nil
-        pendingOnLogged = nil
-        nfcBusy = false
-    }
-
-    func tagReaderSession(_ session: NFCTagReaderSession, didDetect tags: [NFCTag]) {
-        print("[NFC] didDetect tags count=\(tags.count)")
-        logger.debug("didDetect tags count=\(tags.count)")
-        if tags.count > 1 {
-            session.alertMessage = "More than one tag detected. Remove other tags and try again."
-            session.restartPolling()
-            return
-        }
-        guard let tag = tags.first else { return }
-
-        session.connect(to: tag) { connectError in
-            print("[NFC] connected to tag")
-            self.logger.debug("connected to tag")
-            if let connectError = connectError {
-                session.invalidate(errorMessage: "Connection failed: \(connectError.localizedDescription)")
-                return
-            }
-
-            // Convert to NDEF-capable tag
-            let ndefTag: NFCNDEFTag?
-            switch tag {
-            case .miFare(let t):
-                // Only Ultralight (NTAG/Type 2) and DESFire (Type 4) are writable on iOS.
-                switch t.mifareFamily {
-                case .ultralight, .desfire:
-                    ndefTag = t
-                default:
-                    session.invalidate(errorMessage: "Unsupported MiFare family on iOS (e.g., Classic/Plus). Use NTAG (Type 2) or DESFire (Type 4).")
-                    return
-                }
-            case .iso7816(let t):  ndefTag = t
-            case .iso15693(let t): ndefTag = t
-            case .feliCa(let t):   ndefTag = t
-            @unknown default:      ndefTag = nil
-            }
-            guard let ndefTag = ndefTag else {
-                session.invalidate(errorMessage: "Tag does not support NDEF.")
-                return
-            }
-
-            ndefTag.queryNDEFStatus { status, capacity, statusError in
-                if let statusError = statusError {
-                    session.invalidate(errorMessage: "Status error: \(statusError.localizedDescription)")
-                    return
-                }
-                switch status {
-                case .notSupported:
-                    session.invalidate(errorMessage: "Tag is not NDEF formatted or not supported.")
-                    return
-                case .readOnly:
-                    session.invalidate(errorMessage: "Tag is read-only.")
-                    return
-                case .readWrite:
-                    break
-                @unknown default:
-                    session.invalidate(errorMessage: "Unknown NDEF status.")
-                    return
-                }
-                guard let payloadToWrite = self.pendingPayload else {
-                    session.invalidate(errorMessage: "Nothing to write.")
-                    return
-                }
-
-                // Cap usage history to 13 entries (Android parity)
-                let capped = self.cappedPayload(payloadToWrite, maxEntries: 13)
-
-                // Build compact message that fits capacity
-                guard let (msg, json) = buildMessageFittingCapacity(capped, capacity: capacity) else {
-                    session.invalidate(errorMessage: "Data too large for tag (capacity: \(capacity) bytes). Use NTAG215/216 or clear older history.")
-                    return
-                }
-                print("[NFC] writing NDEF Text record (bytes est=\(estimatedSize(of: msg, withTextPayload: json)))")
-                self.logger.debug("writing NDEF Text record")
-
-                ndefTag.writeNDEF(msg) { writeError in
-                    if let writeError = writeError {
-                        session.invalidate(errorMessage: "Write failed: \(writeError.localizedDescription)")
-                    } else {
-                        session.alertMessage = "Write successful"
-                        session.invalidate()
-                        print("[NFC] write successful")
-                        self.logger.debug("write successful")
-                        DispatchQueue.main.async {
-                            self.payload = capped
-                            self.pendingOnLogged?(json)
-                        }
-                    }
-                    // Clear write state
-                    self.pendingPayload = nil
-                    self.pendingOnLogged = nil
+                    self.readSession = nil
                     self.nfcBusy = false
+                    return
+                }
+                switch status {
+                case .notSupported:
+                    session.invalidate(errorMessage: "Tag is not NDEF formatted or not supported.")
+                    self.readSession = nil
+                    self.nfcBusy = false
+                    return
+                case .readOnly, .readWrite:
+                    break
+                @unknown default:
+                    session.invalidate(errorMessage: "Unknown NDEF status.")
+                    self.readSession = nil
+                    self.nfcBusy = false
+                    return
+                }
+
+                tag.readNDEF { message, readError in
+                    if let readError = readError {
+                        session.invalidate(errorMessage: "Read failed: \(readError.localizedDescription)")
+                        self.readSession = nil
+                        self.nfcBusy = false
+                        return
+                    }
+                    guard let message = message else {
+                        session.invalidate(errorMessage: "No NDEF message found on tag.")
+                        self.readSession = nil
+                        self.nfcBusy = false
+                        return
+                    }
+
+                    var foundText: String? = nil
+                    for rec in message.records {
+                        if let s = NFCController.decodeText(from: rec) {
+                            foundText = s
+                            break
+                        }
+                    }
+
+                    guard let json = foundText else {
+                        session.invalidate(errorMessage: "No compatible text record found on tag.")
+                        self.readSession = nil
+                        self.nfcBusy = false
+                        return
+                    }
+
+                    self.onReadRaw?(json)
+                    if let data = json.data(using: .utf8),
+                       let p = try? JSONDecoder().decode(BatteryPayload.self, from: data) {
+                        DispatchQueue.main.async { self.payload = p }
+                        session.invalidate()
+                        self.readSession = nil
+                        self.nfcBusy = false
+                    } else {
+                        session.invalidate(errorMessage: "Found text record but JSON was invalid.")
+                        self.readSession = nil
+                        self.nfcBusy = false
+                    }
                 }
             }
         }
@@ -371,14 +322,13 @@ extension NFCController {
         self.pendingOnLogged = nil
         self.isWriting = false
         self.nfcBusy = false
-        self.writeSession = nil
         // readSession is invalidated by the system after we call session.invalidate()
     }
+
     /// Decode a text string from an NDEF record. Supports Well-Known Text ("T") and MIME `text/plain`.
     static func decodeText(from record: NFCNDEFPayload) -> String? {
         switch record.typeNameFormat {
         case .nfcWellKnown:
-            // Well-known type; expect "T" (RTD_TEXT)
             guard let typeString = String(data: record.type, encoding: .utf8), typeString == "T" else { return nil }
             let payload = record.payload
             guard payload.count > 0 else { return nil }
@@ -390,9 +340,7 @@ extension NFCController {
             return String(data: textData, encoding: isUTF16 ? .utf16 : .utf8)
 
         case .media:
-            // MIME type like "text/plain"
             if let mime = String(data: record.type, encoding: .utf8), mime.lowercased() == "text/plain" {
-                // Try UTF-8 first, then UTF-16
                 if let s = String(data: record.payload, encoding: .utf8) { return s }
                 if let s = String(data: record.payload, encoding: .utf16) { return s }
             }
@@ -404,10 +352,9 @@ extension NFCController {
     }
 
     /// Return a copy of the payload keeping only the most recent `maxEntries` usage items
-    private func cappedPayload(_ p: BatteryPayload, maxEntries: Int = 13) -> BatteryPayload {
+    private func cappedPayload(_ p: BatteryPayload, maxEntries: Int = MAX_RECORDS) -> BatteryPayload {
         var copy = p
         if copy.u.count > maxEntries {
-            // Keep the newest N entries (highest indices / most recent timestamps)
             copy.u = Array(copy.u.suffix(maxEntries))
         }
         return copy
@@ -423,21 +370,6 @@ extension NFCController {
                       let root = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController {
                 root.topMost.present(ac, animated: true)
             }
-        }
-    }
-
-    // MARK: - Debug helper
-    func debugStartWriteSessionOnly() {
-        DispatchQueue.main.async {
-            print("[NFC] debugStartWriteSessionOnly() invoked")
-            self.logger.debug("debugStartWriteSessionOnly() invoked")
-            guard let s = NFCTagReaderSession(pollingOption: [.iso14443], delegate: self, queue: .main) else {
-                self.presentHint("NFC Tag session not permitted", msg: "Check TAG entitlement and Code Signing Entitlements path.")
-                return
-            }
-            s.alertMessage = "Write-session test: hold tag"
-            self.writeSession = s
-            s.begin()
         }
     }
 }
@@ -457,43 +389,44 @@ extension UIViewController {
     var topMost: UIViewController { presentedViewController?.topMost ?? self }
 }
 
+// MARK: - NDEF builders
 
 /// Encode without spaces/newlines to save bytes.
 func compactJSON<T: Encodable>(_ value: T) -> String? {
     let enc = JSONEncoder()
-    // default is already compact; ensure no prettyPrinted anywhere
     guard let data = try? enc.encode(value) else { return nil }
     return String(data: data, encoding: .utf8)
 }
 
-/// Build a Text-record NDEF message from JSON string.
+/// Build a Text (RTD-T) NDEF message that **forces UTF-8** and language code "en".
 func makeTextRecordMessage(_ json: String) -> NFCNDEFMessage? {
-    // Text record payload = 1 status byte + lang code bytes + text bytes
-    guard let rec = NFCNDEFPayload.wellKnownTypeTextPayload(
-        string: json,
-        locale: Locale(identifier: "en")
-    ) else { return nil }
+    guard let textData = json.data(using: .utf8) else { return nil }
+    let lang = "en"
+    guard let langData = lang.data(using: .utf8) else { return nil }
+
+    // Status byte: bit7 = 0 (UTF-8), bits 0..5 = language length
+    let status: UInt8 = UInt8(langData.count & 0x3F)
+
+    var payload = Data([status])
+    payload.append(langData)
+    payload.append(textData)
+
+    let type = Data("T".utf8)
+    let rec = NFCNDEFPayload(format: .nfcWellKnown, type: type, identifier: Data(), payload: payload)
     return NFCNDEFMessage(records: [rec])
 }
 
 /// Conservative estimate of NDEF message size in bytes.
-/// (Payload + small header overhead buffer.)
 func estimatedSize(of msg: NFCNDEFMessage, withTextPayload text: String) -> Int {
-    // The text payload itself
     let payloadBytes = text.utf8.count
-    // Status + "en"  (status=1 byte, "en"=2 bytes)
-    let textMeta = 3
-    // Record header (TNF + SR + ID flags, type len, payload len, type = "T")
-    // SR makes header ~4 bytes; add a small buffer for safety.
-    let header = 8
+    let textMeta = 3      // 1 status + 2 for "en"
+    let header = 8        // SR header buffer
     return payloadBytes + textMeta + header
 }
 
 /// Try to fit by trimming oldest usage entries if needed.
 func buildMessageFittingCapacity(_ full: BatteryPayload, capacity: Int) -> (NFCNDEFMessage, String)? {
-    // Start from the full payload; drop oldest usages until it fits.
     var work = full
-    // Defensive bound to avoid long loops
     var attempts = max(1, work.u.count + 1)
 
     while attempts > 0 {
@@ -506,10 +439,9 @@ func buildMessageFittingCapacity(_ full: BatteryPayload, capacity: Int) -> (NFCN
             return (msg, json)
         }
 
-        // Too large: drop the oldest 5 entries (or 1 if fewer than 5 remain)
-        let dropCount = min( max(1, work.u.count / 6), max(1, work.u.count) )
+        // Too large: drop exactly one oldest entry and retry
         if work.u.isEmpty { break }
-        work.u.removeFirst(min(dropCount, work.u.count))
+        work.u.removeFirst(1)
     }
 
     return nil

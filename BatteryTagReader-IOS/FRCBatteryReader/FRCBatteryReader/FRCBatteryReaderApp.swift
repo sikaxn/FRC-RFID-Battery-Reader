@@ -2,8 +2,6 @@
 //  FRCBatteryReaderApp.swift
 //  FRCBatteryReader
 //
-//  Created by Nathan on 2025-09-13.
-//
 
 import SwiftUI
 

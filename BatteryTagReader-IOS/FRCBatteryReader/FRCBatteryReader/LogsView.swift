@@ -2,11 +2,8 @@
 //  LogsView.swift
 //  FRCBatteryReader
 //
-//  Created by Nathan on 2025-09-13.
-//
 
 import SwiftUI
-import UIKit
 
 struct LogsView: View {
     @EnvironmentObject var store: LogStore
@@ -14,14 +11,28 @@ struct LogsView: View {
 
     var body: some View {
         NavigationStack {
-            List(store.rawLog.sorted { $0.time > $1.time }) { r in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(r.type.rawValue.uppercased()).font(.headline)
-                    Text(r.time.formatted(date: .abbreviated, time: .standard))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(r.dataRaw)
-                        .font(.system(.footnote, design: .monospaced))
+            List {
+                if store.items.isEmpty {
+                    Text("No logs yet").foregroundStyle(.secondary)
+                } else {
+                    ForEach(store.items) { item in
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Text(item.kind == .read ? "READ" : "WRITE")
+                                    .font(.caption).bold()
+                                    .padding(.vertical, 2).padding(.horizontal, 6)
+                                    .background(item.kind == .read ? Color.blue.opacity(0.15) : Color.green.opacity(0.2))
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                Spacer()
+                                Text(item.when, style: .time)
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                            Text(item.raw)
+                                .font(.system(.footnote, design: .monospaced))
+                                .textSelection(.enabled)
+                        }
+                        .padding(.vertical, 6)
+                    }
                 }
             }
             .navigationTitle("Logs")
@@ -30,17 +41,12 @@ struct LogsView: View {
                     Button("Close") { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Export CSV") {
-                        if let url = store.exportCSV() {
-                            let av = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-                            UIApplication.shared.keyWindowTop?.present(av, animated: true)
-                        }
+                    Button(role: .destructive) {
+                        store.clear()
+                    } label: {
+                        Label("Clear All", systemImage: "trash")
                     }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Clear Logs") {
-                        store.rawLog.removeAll()
-                    }
+                    .disabled(store.items.isEmpty)
                 }
             }
         }

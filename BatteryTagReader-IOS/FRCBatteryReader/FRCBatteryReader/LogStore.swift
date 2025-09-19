@@ -2,63 +2,46 @@
 //  LogStore.swift
 //  FRCBatteryReader
 //
-//  Created by Nathan on 2025-09-13.
-//
 
 import Foundation
 
-struct RawLogItem: Identifiable, Codable {
-    enum Kind: String, Codable { case read, write }
-    var id: UUID = UUID()
-    var time: Date
-    var type: Kind
-    var dataRaw: String
+enum LogKind: String, Codable {
+    case read, write
+}
+
+struct RawLogItem: Codable, Identifiable {
+    let id: UUID
+    let when: Date
+    let kind: LogKind
+    let raw: String
 }
 
 final class LogStore: ObservableObject {
-    @Published var rawLog: [RawLogItem] = []
-    @Published var lastReadRaw: String? = nil
+    @Published private(set) var items: [RawLogItem] = []
 
-    private let logURL: URL = {
-        let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        return dir.appendingPathComponent("RawLog.json")
-    }()
-
-    func log(_ kind: RawLogItem.Kind, raw: String) {
-        if kind == .read, lastReadRaw == raw { return }
-        lastReadRaw = raw
-        rawLog.append(.init(time: .now, type: kind, dataRaw: raw))
-        save()
-    }
+    private let key = "FRCBatteryReader.Logs"
 
     func load() {
-        do {
-            let d = try Data(contentsOf: logURL)
-            let arr = try JSONDecoder().decode([RawLogItem].self, from: d)
-            self.rawLog = arr
-            self.lastReadRaw = arr.last(where: { $0.type == .read })?.dataRaw
-        } catch { }
-    }
-
-    func save() {
-        do {
-            let d = try JSONEncoder().encode(rawLog)
-            try d.write(to: logURL, options: .atomic)
-        } catch { print("log save error", error) }
-    }
-
-    func exportCSV() -> URL? {
-        let url = logURL.deletingLastPathComponent().appendingPathComponent("BatteryLog.csv")
-        var csv = "time,type,data\n"
-        let fmt = ISO8601DateFormatter()
-        for r in rawLog {
-            let t = fmt.string(from: r.time)
-            let line = "\(t),\(r.type.rawValue),\"\(r.dataRaw.replacingOccurrences(of: "\"", with: "\"\""))\"\n"
-            csv.append(line)
+        guard let data = UserDefaults.standard.data(forKey: key) else { return }
+        if let decoded = try? JSONDecoder().decode([RawLogItem].self, from: data) {
+            items = decoded.sorted { $0.when > $1.when }
         }
-        do {
-            try csv.data(using: .utf8)?.write(to: url, options: .atomic)
-            return url
-        } catch { return nil }
+    }
+
+    private func persist() {
+        if let data = try? JSONEncoder().encode(items) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
+    func log(_ kind: LogKind, raw: String) {
+        let entry = RawLogItem(id: UUID(), when: Date(), kind: kind, raw: raw)
+        items.insert(entry, at: 0)
+        persist()
+    }
+
+    func clear() {
+        items.removeAll()
+        persist()
     }
 }

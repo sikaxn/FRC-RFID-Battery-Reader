@@ -2,8 +2,6 @@
 //  ContentView.swift
 //  FRCBatteryReader
 //
-//  Created by Nathan on 2025-09-13.
-//
 
 import SwiftUI
 import UIKit
@@ -14,7 +12,6 @@ struct ContentView: View {
 
     @State private var showLogs = false
     @State private var showStatusPicker = false
-    @State private var pickedNote: NoteType = .normal
 
     var body: some View {
         VStack(spacing: 12) {
@@ -44,16 +41,13 @@ struct ContentView: View {
                             Text("Usage Log:")
                                 .font(.headline)
                                 .padding(.top, 8)
+
+                            // Legend
                             HStack(spacing: 12) {
-                                HStack(spacing: 6) {
-                                    Circle().fill(Color.green).frame(width: 8, height: 8)
-                                    Text("Robot").font(.caption).foregroundStyle(.secondary)
-                                }
-                                HStack(spacing: 6) {
-                                    Circle().fill(Color.orange).frame(width: 8, height: 8)
-                                    Text("Charger").font(.caption).foregroundStyle(.secondary)
-                                }
-                            }
+                                legendDot(.green, title: "Robot")
+                                legendDot(.orange, title: "Charger")
+                            }.padding(.bottom, 2)
+
                             ForEach(p.u.sorted { $0.i > $1.i }) { e in
                                 usageRow(e)
                             }
@@ -91,7 +85,7 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $showLogs) {
-            LogsView()
+            LogsView().environmentObject(store)
         }
         .confirmationDialog("Select Note Type",
                             isPresented: $showStatusPicker,
@@ -101,28 +95,20 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            // hook read logging and load persisted logs
             nfc.onReadRaw = { raw in store.log(.read, raw: raw) }
             store.load()
         }
     }
 
-    // MARK: - Color helpers (Android-like colors)
-    private func deviceColor(_ d: Int) -> Color {
-        // 1 = robot (green), 2 = charger (orange)
-        return (d == 2) ? Color.orange : Color.green
-    }
+    // MARK: - Small UI bits
 
-    private func noteColor(_ t: NoteType) -> Color {
-        switch t {
-        case .practice: return .yellow
-        case .scrap: return .red
-        case .other: return .blue
-        default: return .clear
+    func legendDot(_ color: Color, title: String) -> some View {
+        HStack(spacing: 6) {
+            Circle().fill(color).frame(width: 8, height: 8)
+            Text(title).font(.caption).foregroundStyle(.secondary)
         }
     }
 
-    // MARK: - UI helpers
     func labeled(_ title: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.caption).foregroundStyle(.secondary)
@@ -132,8 +118,16 @@ struct ContentView: View {
 
     @ViewBuilder
     func noteBadge(_ t: NoteType) -> some View {
-        let bg = noteColor(t).opacity(t == .normal ? 0.0 : 0.22)
-        let stroke = noteColor(t).opacity(t == .normal ? 0.0 : 0.9)
+        let base: Color = {
+            switch t {
+            case .practice: return .yellow
+            case .scrap: return .red
+            case .other: return .blue
+            default: return .clear
+            }
+        }()
+        let bg = base.opacity(t == .normal ? 0 : 0.22)
+        let stroke = base.opacity(t == .normal ? 0 : 0.9)
         HStack(spacing: 6) {
             if t != .normal {
                 Circle().fill(stroke).frame(width: 8, height: 8)
@@ -143,20 +137,14 @@ struct ContentView: View {
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(bg)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(stroke, lineWidth: t == .normal ? 0 : 1)
-        )
+        .background(RoundedRectangle(cornerRadius: 10).fill(bg))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(stroke, lineWidth: t == .normal ? 0 : 1))
     }
 
     func usageRow(_ e: UsageEntry) -> some View {
-        let stripe = deviceColor(e.d)
+        let stripe = (e.d == 2) ? Color.orange : Color.green
+        let dateText = isAllZeroTimestamp(e.t) ? "Date not available" : formatUTCStringToLocal(e.t)
         return HStack(alignment: .top, spacing: 10) {
-            // Leading colored stripe
             Rectangle()
                 .fill(stripe)
                 .frame(width: 5)
@@ -164,56 +152,48 @@ struct ContentView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text("#\(e.i)")
-                        .font(.headline)
+                    Text("#\(e.i)").font(.headline)
                     Spacer()
-                    let isAllZeros = e.t.trimmingCharacters(in: .whitespacesAndNewlines).allSatisfy { $0 == "0" }
-                    Text(isAllZeros ? "Date not available" : formatUTCStringToLocal(e.t))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(dateText).font(.caption).foregroundStyle(.secondary)
                 }
                 HStack(spacing: 10) {
-                    Label((e.d == 2) ? "Charger" : "Robot", systemImage: (e.d == 2) ? "bolt.fill" : "gearshape.2.fill")
+                    Label((e.d == 2) ? "Charger" : "Robot",
+                          systemImage: (e.d == 2) ? "bolt.fill" : "gearshape.2.fill")
                         .font(.footnote)
                         .padding(.vertical, 4)
                         .padding(.horizontal, 8)
-                        .background(deviceColor(e.d).opacity(0.18))
+                        .background(((e.d == 2) ? Color.orange : Color.green).opacity(0.18))
                         .clipShape(RoundedRectangle(cornerRadius: 6))
-                    Text("E: \(e.e) kJ")
-                        .font(.footnote)
-                    Text("V: \(e.v)")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Text("E: \(e.e) kJ").font(.footnote)
+                    Text("V: \(e.v)").font(.footnote).foregroundStyle(.secondary)
                 }
             }
         }
         .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.background.opacity(0.4))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(stripe.opacity(0.25), lineWidth: 1)
-        )
+        .background(RoundedRectangle(cornerRadius: 12).fill(.background.opacity(0.4)))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(stripe.opacity(0.25), lineWidth: 1))
     }
 
-    // MARK: - Actions (write-safe sequencing)
+    // MARK: - Actions
+
     func promptInitNew() {
         var controller: UIAlertController?
         controller = UIAlertController(title: "Enter Serial Number", message: nil, preferredStyle: .alert)
-        controller?.addTextField { $0.placeholder = "Serial Number" }
+        controller?.addTextField { tf in
+            tf.placeholder = "Serial Number"
+            tf.autocapitalizationType = .allCharacters
+            tf.clearButtonMode = .whileEditing
+        }
         controller?.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         controller?.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-            let sn = controller?.textFields?.first?.text ?? ""
-            let p = BatteryPayload(sn: sn, fu: currentTimestampUTC(), cc: 0, n: 0, u: [])
-
+            let sn = controller?.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            var p = BatteryPayload(sn: sn, fu: currentTimestampUTC(), cc: 0, n: 0, u: [])
+            // Cap to 13 just in case
+            if p.u.count > MAX_RECORDS { p.u = Array(p.u.suffix(MAX_RECORDS)) }
             controller?.dismiss(animated: true) {
-                DispatchQueue.main.async {
-                    nfc.write(p) { raw in
-                        store.log(.write, raw: raw)
-                        nfc.payload = p
-                    }
+                nfc.write(p) { raw in
+                    store.log(.write, raw: raw)
+                    nfc.payload = p
                 }
             }
         }))
@@ -221,32 +201,35 @@ struct ContentView: View {
     }
 
     func addUsage(d: Int, incrementCycle: Bool = false) {
-        guard var p = nfc.payload else { return }
+        guard var p = nfc.payload else {
+            let ac = UIAlertController(title: "No tag loaded", message: "Scan a battery tag first.", preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            UIApplication.shared.keyWindowTop?.present(ac, animated: true)
+            return
+        }
         let maxId = p.u.map { $0.i }.max() ?? 0
         let entry = UsageEntry(i: maxId + 1, t: currentTimestampUTC(), d: d, e: 0, v: 0)
         p.u.append(entry)
-        if p.u.count > MAX_RECORDS {
-            p.u.removeFirst(p.u.count - MAX_RECORDS)
-        }
+        if p.u.count > MAX_RECORDS { p.u.removeFirst(p.u.count - MAX_RECORDS) }
         if incrementCycle { p.cc += 1 }
 
-        DispatchQueue.main.async {
-            nfc.write(p) { raw in
-                store.log(.write, raw: raw)
-                nfc.payload = p
-            }
+        nfc.write(p) { raw in
+            store.log(.write, raw: raw)
+            nfc.payload = p
         }
     }
 
     func setStatus(_ t: NoteType) {
-        guard var p = nfc.payload else { return }
+        guard var p = nfc.payload else {
+            let ac = UIAlertController(title: "No tag loaded", message: "Scan a battery tag first.", preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            UIApplication.shared.keyWindowTop?.present(ac, animated: true)
+            return
+        }
         p.n = t.rawValue
-
-        DispatchQueue.main.async {
-            nfc.write(p) { raw in
-                store.log(.write, raw: raw)
-                nfc.payload = p
-            }
+        nfc.write(p) { raw in
+            store.log(.write, raw: raw)
+            nfc.payload = p
         }
     }
 }
