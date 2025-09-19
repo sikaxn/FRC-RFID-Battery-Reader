@@ -3,3 +3,4 @@
 /BatteryTagReader
 .DS_Store
 /BatteryTagReader-python/__pycache__
+BatteryTagReader-python/log.json

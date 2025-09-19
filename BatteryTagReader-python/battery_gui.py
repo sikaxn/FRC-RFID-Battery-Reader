@@ -14,12 +14,16 @@ UI:
 - Usage list (most recent first), color-coded: charger=green, robot=blue
 - Note type badge (color-coded): 0 normal, 1 practice, 2 scrap, 3 other
 - Raw payload shown if JSON/record parse fails, also printed to console
+
+Logging:
+- Matches Android app log format via battery_log.log_android_event
 """
 import datetime
-
 import threading
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog, scrolledtext, filedialog
+
+from battery_log import log_android_event  # <-- Android-style logger
 
 from battery_reader import with_reader
 from battery_json import (
@@ -49,11 +53,9 @@ def _fmt_usage_time(tstr: str) -> str:
     if not tstr or tstr == "0000000000":
         return "Date not available"
     try:
-        # Interpret as local time already; it’s a naive timestamp from the card
         dt = datetime.datetime.strptime(tstr, "%y%m%d%H%M")
         return dt.strftime("%Y-%m-%d %H:%M")
     except Exception:
-        # If it’s malformed, just show the raw string
         return tstr
 
 
@@ -123,12 +125,12 @@ class App(tk.Tk):
         cols = ("i", "time", "device", "extra")
         self.tree = ttk.Treeview(left, columns=cols, show="headings", height=16)
         self.tree.heading("i", text="#")
-        self.tree.heading("time", text="Time (YYMMDDHHMM)")
+        self.tree.heading("time", text="Time")
         self.tree.heading("device", text="Device")
         self.tree.heading("extra", text="e/v")
 
         self.tree.column("i", width=40, anchor="center")
-        self.tree.column("time", width=140, anchor="center")
+        self.tree.column("time", width=160, anchor="center")
         self.tree.column("device", width=100, anchor="center")
         self.tree.column("extra", width=120, anchor="center")
 
@@ -158,18 +160,22 @@ class App(tk.Tk):
 
     # ---------- NFC Actions ----------
     def read_tag(self):
-        """Read, parse JSON (Text or MIME). Show RAW if parsing fails."""
+        """Read, parse JSON (Text or MIME). Show RAW if parsing fails, and log."""
         def _do(rd):
             self.uid = rd.get_uid_hex()
             try:
                 s = rd.read_ndef_text()      # supports Text('T') & MIME JSON
                 self.doc = json_loads(s)     # parse JSON
                 self.raw_fallback = None
+                # Log Android-style
+                log_android_event("read", s)
             except Exception:
                 raw = rd.read_raw_text()
                 print("[RAW CARD TEXT BEGIN]"); print(raw); print("[RAW CARD TEXT END]")
                 self.doc = None
                 self.raw_fallback = raw
+                # Log even if JSON parse failed
+                log_android_event("read", raw)
         self._run_reader(_do, done=self._render_all, label="Reading...")
 
     def _write_and_refresh(self, write_fn):
@@ -186,10 +192,12 @@ class App(tk.Tk):
     def mock_robot(self):
         if not self._ensure_doc_or_warn():
             return
-        # prepare new doc
         new_doc = add_usage(self.doc, d=1)
         payload = dumps_compact(new_doc)
-        self._write_and_refresh(lambda rd: rd.write_ndef_text(payload, mode="text"))
+        def writer(rd, p=payload):
+            log_android_event("write", p)            # log before write
+            rd.write_ndef_text(p, mode="text")
+        self._write_and_refresh(writer)
 
     # Charged: add usage (d=2) AND cc += 1
     def charged(self):
@@ -198,7 +206,10 @@ class App(tk.Tk):
         nd = add_usage(self.doc, d=2)
         nd = set_meta(nd, cc=nd.get("cc", 0) + 1)
         payload = dumps_compact(nd)
-        self._write_and_refresh(lambda rd: rd.write_ndef_text(payload, mode="text"))
+        def writer(rd, p=payload):
+            log_android_event("write", p)            # log before write
+            rd.write_ndef_text(p, mode="text")
+        self._write_and_refresh(writer)
 
     # Set Status: set note type n (0..3)
     def set_status(self):
@@ -216,7 +227,10 @@ class App(tk.Tk):
             return
         nd = set_meta(self.doc, n=int(value))
         payload = dumps_compact(nd)
-        self._write_and_refresh(lambda rd: rd.write_ndef_text(payload, mode="text"))
+        def writer(rd, p=payload):
+            log_android_event("write", p)            # log before write
+            rd.write_ndef_text(p, mode="text")
+        self._write_and_refresh(writer)
 
     # Init New: prompt SN, init empty doc, write, re-read
     def init_new(self):
@@ -225,7 +239,10 @@ class App(tk.Tk):
             return
         new_doc = ensure_schema({"sn": str(sn), "fu": now_yyMMddHHmm_utc(), "cc": 0, "n": 0, "u": []})
         payload = dumps_compact(new_doc)
-        self._write_and_refresh(lambda rd: rd.write_ndef_text(payload, mode="text"))
+        def writer(rd, p=payload):
+            log_android_event("write", p)            # log before write
+            rd.write_ndef_text(p, mode="text")
+        self._write_and_refresh(writer)
 
     # ---------- File helpers ----------
     def load_json_file(self):
@@ -301,7 +318,6 @@ class App(tk.Tk):
             tag = "charger" if d == 2 else ("robot" if d == 1 else "")
             dev_name = USAGE_COLOR.get(d, ("Unknown", "#fff", "#000"))[0]
             self.tree.insert("", "end", values=(i, _fmt_usage_time(t), dev_name, f"e={e}, v={v}"), tags=(tag,))
-
 
     # ---------- helpers ----------
     def _ensure_doc_or_warn(self) -> bool:
