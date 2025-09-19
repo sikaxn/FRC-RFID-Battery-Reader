@@ -153,15 +153,15 @@ extension NFCController: NFCNDEFReaderSessionDelegate {
         }
 
         self.onReadRaw?(json)
-        if let data = json.data(using: .utf8), let p = try? JSONDecoder().decode(BatteryPayload.self, from: data) {
+        if let p = self.decodeBatteryPayload(fromJSON: json) {
             DispatchQueue.main.async { self.payload = p }
             session.invalidate()
             self.readSession = nil
             self.nfcBusy = false
         } else {
-            print("[NFC] Text record present but JSON decode failed")
-            logger.debug("text record present but JSON decode failed")
-            session.invalidate(errorMessage: "Found text record but JSON was invalid.")
+            print("[NFC] Text record present but JSON did not match schema")
+            logger.debug("text record present but JSON did not match schema")
+            session.invalidate(errorMessage: "Found text record but JSON didn’t match the app schema.")
             self.readSession = nil
             self.nfcBusy = false
         }
@@ -298,14 +298,13 @@ extension NFCController: NFCNDEFReaderSessionDelegate {
                     }
 
                     self.onReadRaw?(json)
-                    if let data = json.data(using: .utf8),
-                       let p = try? JSONDecoder().decode(BatteryPayload.self, from: data) {
+                    if let p = self.decodeBatteryPayload(fromJSON: json) {
                         DispatchQueue.main.async { self.payload = p }
                         session.invalidate()
                         self.readSession = nil
                         self.nfcBusy = false
                     } else {
-                        session.invalidate(errorMessage: "Found text record but JSON was invalid.")
+                        session.invalidate(errorMessage: "Found text record but JSON didn’t match the app schema.")
                         self.readSession = nil
                         self.nfcBusy = false
                     }
@@ -371,6 +370,45 @@ extension NFCController {
                 root.topMost.present(ac, animated: true)
             }
         }
+    }
+
+    /// Decode BatteryPayload from JSON, with a compatibility pass that coerces floating-point voltages to integers if needed.
+    private func decodeBatteryPayload(fromJSON json: String) -> BatteryPayload? {
+        let dec = JSONDecoder()
+        if let data = json.data(using: .utf8),
+           let p = try? dec.decode(BatteryPayload.self, from: data) {
+            return p
+        }
+        // Compatibility path: if model expects Int for "v" but JSON has 12.1, coerce to Int and try again.
+        if let coerced = NFCController.coerceVoltagesToInt(json),
+           let data2 = coerced.data(using: .utf8),
+           let p2 = try? dec.decode(BatteryPayload.self, from: data2) {
+            return p2
+        }
+        return nil
+    }
+
+    /// If the JSON contains floating-point "v" fields inside the "u" array, round them to Int and return a rewritten JSON string.
+    private static func coerceVoltagesToInt(_ json: String) -> String? {
+        guard let data = json.data(using: .utf8),
+              var root = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+            return nil
+        }
+        guard var arr = root["u"] as? [[String: Any]] else { return nil }
+        var changed = false
+        for i in 0 ..< arr.count {
+            if let v = arr[i]["v"] as? Double {
+                arr[i]["v"] = Int(v.rounded())
+                changed = true
+            }
+        }
+        guard changed else { return nil }
+        root["u"] = arr
+        guard let outData = try? JSONSerialization.data(withJSONObject: root, options: []),
+              let out = String(data: outData, encoding: .utf8) else {
+            return nil
+        }
+        return out
     }
 }
 
