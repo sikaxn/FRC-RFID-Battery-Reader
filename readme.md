@@ -10,9 +10,13 @@ https://github.com/sikaxn/FRC-Custom-CAN-Sensor/tree/main/Arduino/Battery_Tracki
 
 ![](img/ui2.png)
 
-# Python version
+# Python version (Windows / macOS / Ubuntu)
 
 ![](img/python.png)
+
+![](img/ubuntu.png)
+
+![](img/mac.webp)
 
 # iOS version
 
