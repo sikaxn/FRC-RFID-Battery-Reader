@@ -2,3 +2,4 @@
 /BatteryTagReader/.idea
 /BatteryTagReader
 .DS_Store
+/BatteryTagReader-python/__pycache__
