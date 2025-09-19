@@ -6,3 +6,4 @@
 BatteryTagReader-python/log.json
 log.json
 /BatteryTagReader-python/venv
+*.xcuserstate
