@@ -1,6 +1,6 @@
 # Battery Tag reader 
 
-Full Documentation is in another repository
+Full Documentation and robot side, visit another repository
 
 https://github.com/sikaxn/FRC-Custom-CAN-Sensor/tree/main/Arduino/Battery_Tracking
 
