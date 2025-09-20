@@ -22,6 +22,8 @@ import datetime
 import threading
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog, scrolledtext, filedialog
+from battery_print import render_and_open   # ← new
+
 
 from battery_log import log_android_event  # <-- Android-style logger
 
@@ -80,6 +82,8 @@ class App(tk.Tk):
         ttk.Button(top, text="Charged", command=self.charged).pack(side=tk.LEFT)
         ttk.Button(top, text="Set Status", command=self.set_status).pack(side=tk.LEFT, padx=6)
         ttk.Button(top, text="Init New", command=self.init_new).pack(side=tk.LEFT)
+        
+
 
         ttk.Separator(self, orient="horizontal").pack(fill=tk.X, padx=10, pady=6)
 
@@ -157,6 +161,18 @@ class App(tk.Tk):
         filebar.pack(fill=tk.X, padx=10, pady=(0, 8))
         ttk.Button(filebar, text="Load JSON...", command=self.load_json_file).pack(side=tk.LEFT)
         ttk.Button(filebar, text="Save JSON...", command=self.save_json_file).pack(side=tk.LEFT, padx=6)
+        ttk.Button(filebar, text="Print", command=self.print_report).pack(side=tk.LEFT, padx=6)  # ← new
+
+    # ---------- print Actions ---------- 
+    def print_report(self):
+        if not self.doc:
+            messagebox.showinfo("Info", "Read a valid JSON tag first or Load JSON.")
+            return
+        try:
+            path = render_and_open(self.doc, uid=self.uid)
+            self.status.set(f"Report generated: {path}")
+        except Exception as e:
+            messagebox.showerror("Print Error", str(e))
 
     # ---------- NFC Actions ----------
     def read_tag(self):
