@@ -7,32 +7,38 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D8F8886B2E763C93000E35DC /* CoreNFC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8F8886A2E763C93000E35DC /* CoreNFC.framework */; };
 		D8F8886C2E763CCF000E35DC /* CoreNFC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8F8886A2E763C93000E35DC /* CoreNFC.framework */; };
+		D8F9ED142E7E45B2006E123C /* FRC Battery Reader - Clip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = D8F9ED082E7E45B1006E123C /* FRC Battery Reader - Clip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		D8F8884D2E763AB6000E35DC /* PBXContainerItemProxy */ = {
+		D8F9ED122E7E45B2006E123C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D8F888372E763AB4000E35DC /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = D8F8883E2E763AB4000E35DC;
-			remoteInfo = FRCBatteryReader;
-		};
-		D8F888572E763AB6000E35DC /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D8F888372E763AB4000E35DC /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D8F8883E2E763AB4000E35DC;
-			remoteInfo = FRCBatteryReader;
+			remoteGlobalIDString = D8F9ED072E7E45B1006E123C;
+			remoteInfo = "FRC Battery Reader - Clip";
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		D8F9ED192E7E45B2006E123C /* Embed App Clips */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/AppClips";
+			dstSubfolderSpec = 16;
+			files = (
+				D8F9ED142E7E45B2006E123C /* FRC Battery Reader - Clip.app in Embed App Clips */,
+			);
+			name = "Embed App Clips";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		D8F8883F2E763AB4000E35DC /* FRCBatteryReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FRCBatteryReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		D8F8884C2E763AB6000E35DC /* FRCBatteryReaderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FRCBatteryReaderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		D8F888562E763AB6000E35DC /* FRCBatteryReaderUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FRCBatteryReaderUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8F8886A2E763C93000E35DC /* CoreNFC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreNFC.framework; path = System/Library/Frameworks/CoreNFC.framework; sourceTree = SDKROOT; };
+		D8F9ED082E7E45B1006E123C /* FRC Battery Reader - Clip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FRC Battery Reader - Clip.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -42,6 +48,13 @@
 				Info.plist,
 			);
 			target = D8F8883E2E763AB4000E35DC /* FRCBatteryReader */;
+		};
+		D8F9ED182E7E45B2006E123C /* Exceptions for "FRC Battery Reader - Clip" folder in "FRC Battery Reader - Clip" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D8F9ED072E7E45B1006E123C /* FRC Battery Reader - Clip */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -54,14 +67,12 @@
 			path = FRCBatteryReader;
 			sourceTree = "<group>";
 		};
-		D8F8884F2E763AB6000E35DC /* FRCBatteryReaderTests */ = {
+		D8F9ED092E7E45B1006E123C /* FRC Battery Reader - Clip */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FRCBatteryReaderTests;
-			sourceTree = "<group>";
-		};
-		D8F888592E763AB6000E35DC /* FRCBatteryReaderUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FRCBatteryReaderUITests;
+			exceptions = (
+				D8F9ED182E7E45B2006E123C /* Exceptions for "FRC Battery Reader - Clip" folder in "FRC Battery Reader - Clip" target */,
+			);
+			path = "FRC Battery Reader - Clip";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,15 +86,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D8F888492E763AB6000E35DC /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				D8F8886B2E763C93000E35DC /* CoreNFC.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D8F888532E763AB6000E35DC /* Frameworks */ = {
+		D8F9ED052E7E45B1006E123C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -97,8 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				D8F888412E763AB4000E35DC /* FRCBatteryReader */,
-				D8F8884F2E763AB6000E35DC /* FRCBatteryReaderTests */,
-				D8F888592E763AB6000E35DC /* FRCBatteryReaderUITests */,
+				D8F9ED092E7E45B1006E123C /* FRC Battery Reader - Clip */,
 				D8F888692E763C93000E35DC /* Frameworks */,
 				D8F888402E763AB4000E35DC /* Products */,
 			);
@@ -108,8 +110,7 @@
 			isa = PBXGroup;
 			children = (
 				D8F8883F2E763AB4000E35DC /* FRCBatteryReader.app */,
-				D8F8884C2E763AB6000E35DC /* FRCBatteryReaderTests.xctest */,
-				D8F888562E763AB6000E35DC /* FRCBatteryReaderUITests.xctest */,
+				D8F9ED082E7E45B1006E123C /* FRC Battery Reader - Clip.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -132,10 +133,12 @@
 				D8F8883B2E763AB4000E35DC /* Sources */,
 				D8F8883C2E763AB4000E35DC /* Frameworks */,
 				D8F8883D2E763AB4000E35DC /* Resources */,
+				D8F9ED192E7E45B2006E123C /* Embed App Clips */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D8F9ED132E7E45B2006E123C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D8F888412E763AB4000E35DC /* FRCBatteryReader */,
@@ -147,51 +150,27 @@
 			productReference = D8F8883F2E763AB4000E35DC /* FRCBatteryReader.app */;
 			productType = "com.apple.product-type.application";
 		};
-		D8F8884B2E763AB6000E35DC /* FRCBatteryReaderTests */ = {
+		D8F9ED072E7E45B1006E123C /* FRC Battery Reader - Clip */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D8F888632E763AB6000E35DC /* Build configuration list for PBXNativeTarget "FRCBatteryReaderTests" */;
+			buildConfigurationList = D8F9ED152E7E45B2006E123C /* Build configuration list for PBXNativeTarget "FRC Battery Reader - Clip" */;
 			buildPhases = (
-				D8F888482E763AB6000E35DC /* Sources */,
-				D8F888492E763AB6000E35DC /* Frameworks */,
-				D8F8884A2E763AB6000E35DC /* Resources */,
+				D8F9ED042E7E45B1006E123C /* Sources */,
+				D8F9ED052E7E45B1006E123C /* Frameworks */,
+				D8F9ED062E7E45B1006E123C /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				D8F8884E2E763AB6000E35DC /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				D8F8884F2E763AB6000E35DC /* FRCBatteryReaderTests */,
+				D8F9ED092E7E45B1006E123C /* FRC Battery Reader - Clip */,
 			);
-			name = FRCBatteryReaderTests;
+			name = "FRC Battery Reader - Clip";
 			packageProductDependencies = (
 			);
-			productName = FRCBatteryReaderTests;
-			productReference = D8F8884C2E763AB6000E35DC /* FRCBatteryReaderTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		D8F888552E763AB6000E35DC /* FRCBatteryReaderUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = D8F888662E763AB6000E35DC /* Build configuration list for PBXNativeTarget "FRCBatteryReaderUITests" */;
-			buildPhases = (
-				D8F888522E763AB6000E35DC /* Sources */,
-				D8F888532E763AB6000E35DC /* Frameworks */,
-				D8F888542E763AB6000E35DC /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				D8F888582E763AB6000E35DC /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				D8F888592E763AB6000E35DC /* FRCBatteryReaderUITests */,
-			);
-			name = FRCBatteryReaderUITests;
-			packageProductDependencies = (
-			);
-			productName = FRCBatteryReaderUITests;
-			productReference = D8F888562E763AB6000E35DC /* FRCBatteryReaderUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
+			productName = "FRC Battery Reader - Clip";
+			productReference = D8F9ED082E7E45B1006E123C /* FRC Battery Reader - Clip.app */;
+			productType = "com.apple.product-type.application.on-demand-install-capable";
 		};
 /* End PBXNativeTarget section */
 
@@ -206,13 +185,8 @@
 					D8F8883E2E763AB4000E35DC = {
 						CreatedOnToolsVersion = 16.4;
 					};
-					D8F8884B2E763AB6000E35DC = {
+					D8F9ED072E7E45B1006E123C = {
 						CreatedOnToolsVersion = 16.4;
-						TestTargetID = D8F8883E2E763AB4000E35DC;
-					};
-					D8F888552E763AB6000E35DC = {
-						CreatedOnToolsVersion = 16.4;
-						TestTargetID = D8F8883E2E763AB4000E35DC;
 					};
 				};
 			};
@@ -231,8 +205,7 @@
 			projectRoot = "";
 			targets = (
 				D8F8883E2E763AB4000E35DC /* FRCBatteryReader */,
-				D8F8884B2E763AB6000E35DC /* FRCBatteryReaderTests */,
-				D8F888552E763AB6000E35DC /* FRCBatteryReaderUITests */,
+				D8F9ED072E7E45B1006E123C /* FRC Battery Reader - Clip */,
 			);
 		};
 /* End PBXProject section */
@@ -245,14 +218,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D8F8884A2E763AB6000E35DC /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D8F888542E763AB6000E35DC /* Resources */ = {
+		D8F9ED062E7E45B1006E123C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -269,14 +235,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D8F888482E763AB6000E35DC /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D8F888522E763AB6000E35DC /* Sources */ = {
+		D8F9ED042E7E45B1006E123C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -286,15 +245,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		D8F8884E2E763AB6000E35DC /* PBXTargetDependency */ = {
+		D8F9ED132E7E45B2006E123C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = D8F8883E2E763AB4000E35DC /* FRCBatteryReader */;
-			targetProxy = D8F8884D2E763AB6000E35DC /* PBXContainerItemProxy */;
-		};
-		D8F888582E763AB6000E35DC /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = D8F8883E2E763AB4000E35DC /* FRCBatteryReader */;
-			targetProxy = D8F888572E763AB6000E35DC /* PBXContainerItemProxy */;
+			target = D8F9ED072E7E45B1006E123C /* FRC Battery Reader - Clip */;
+			targetProxy = D8F9ED122E7E45B2006E123C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -502,91 +456,69 @@
 			};
 			name = Release;
 		};
-		D8F888642E763AB6000E35DC /* Debug */ = {
+		D8F9ED162E7E45B2006E123C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "FRC Battery Reader - Clip/FRC_Battery_Reader___Clip.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 53MBHYV2D9;
+				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				INFOPLIST_FILE = "FRC Battery Reader - Clip/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = FRCBatteryReader;
+				INFOPLIST_KEY_NFCReaderUsageDescription = "Allow Read / Write to battery Tags";
+				INFOPLIST_KEY_NSIdentityUsageDescription = "";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = nztest.FRCBatteryReaderTests;
+				PRODUCT_BUNDLE_IDENTIFIER = IronMaple.FRCBatteryReader.Clip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FRCBatteryReader.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FRCBatteryReader";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		D8F888652E763AB6000E35DC /* Release */ = {
+		D8F9ED172E7E45B2006E123C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "FRC Battery Reader - Clip/FRC_Battery_Reader___Clip.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 53MBHYV2D9;
+				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				INFOPLIST_FILE = "FRC Battery Reader - Clip/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = FRCBatteryReader;
+				INFOPLIST_KEY_NFCReaderUsageDescription = "Allow Read / Write to battery Tags";
+				INFOPLIST_KEY_NSIdentityUsageDescription = "";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = nztest.FRCBatteryReaderTests;
+				PRODUCT_BUNDLE_IDENTIFIER = IronMaple.FRCBatteryReader.Clip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FRCBatteryReader.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FRCBatteryReader";
-			};
-			name = Release;
-		};
-		D8F888672E763AB6000E35DC /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 53MBHYV2D9;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = nztest.FRCBatteryReaderUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				TEST_TARGET_NAME = FRCBatteryReader;
-			};
-			name = Debug;
-		};
-		D8F888682E763AB6000E35DC /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 53MBHYV2D9;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = nztest.FRCBatteryReaderUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-				TEST_TARGET_NAME = FRCBatteryReader;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -611,20 +543,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D8F888632E763AB6000E35DC /* Build configuration list for PBXNativeTarget "FRCBatteryReaderTests" */ = {
+		D8F9ED152E7E45B2006E123C /* Build configuration list for PBXNativeTarget "FRC Battery Reader - Clip" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D8F888642E763AB6000E35DC /* Debug */,
-				D8F888652E763AB6000E35DC /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		D8F888662E763AB6000E35DC /* Build configuration list for PBXNativeTarget "FRCBatteryReaderUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				D8F888672E763AB6000E35DC /* Debug */,
-				D8F888682E763AB6000E35DC /* Release */,
+				D8F9ED162E7E45B2006E123C /* Debug */,
+				D8F9ED172E7E45B2006E123C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
