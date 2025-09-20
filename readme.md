@@ -6,18 +6,15 @@ https://github.com/sikaxn/FRC-Custom-CAN-Sensor/tree/main/Arduino/Battery_Tracki
 
 # Android version
 
-![](img/ui.png)
-
-![](img/ui2.png)
+<img src="img/ui.png" style="max-width:600px;" />
+<img src="img/ui2.png" style="max-width:600px;" />
 
 # Python version (Windows / macOS / Ubuntu)
 
-![](img/python.png)
-
-![](img/ubuntu.png)
-
-![](img/mac.webp)
+<img src="img/python.png" style="max-width:600px;" />
+<img src="img/ubuntu.png" style="max-width:600px;" />
+<img src="img/mac.webp" style="max-width:600px;" />
 
 # iOS version
 
-![](img/ios.PNG)
+<img src="img/ios.PNG" style="max-width:600px;" />
