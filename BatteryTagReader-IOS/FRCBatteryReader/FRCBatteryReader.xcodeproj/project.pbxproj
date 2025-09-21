@@ -7,19 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D8E7F75C2E7F217200E04A8C /* CoreNFC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8F8886A2E763C93000E35DC /* CoreNFC.framework */; };
 		D8F8886C2E763CCF000E35DC /* CoreNFC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8F8886A2E763C93000E35DC /* CoreNFC.framework */; };
 		D8F9ED142E7E45B2006E123C /* FRC Battery Reader - Clip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = D8F9ED082E7E45B1006E123C /* FRC Battery Reader - Clip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		D8F9ED122E7E45B2006E123C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D8F888372E763AB4000E35DC /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D8F9ED072E7E45B1006E123C;
-			remoteInfo = "FRC Battery Reader - Clip";
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		D8F9ED192E7E45B2006E123C /* Embed App Clips */ = {
@@ -90,6 +81,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8E7F75C2E7F217200E04A8C /* CoreNFC.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,7 +130,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				D8F9ED132E7E45B2006E123C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D8F888412E763AB4000E35DC /* FRCBatteryReader */,
@@ -180,7 +171,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1640;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					D8F8883E2E763AB4000E35DC = {
 						CreatedOnToolsVersion = 16.4;
@@ -244,14 +235,6 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		D8F9ED132E7E45B2006E123C /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = D8F9ED072E7E45B1006E123C /* FRC Battery Reader - Clip */;
-			targetProxy = D8F9ED122E7E45B2006E123C /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
 		D8F8885E2E763AB6000E35DC /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -314,6 +297,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -373,6 +357,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -393,7 +378,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Battery Reader";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NFCReaderUsageDescription = "Allow Read / Write to battery Tags";
-				INFOPLIST_KEY_NSIdentityUsageDescription = "";
+				INFOPLIST_KEY_NSIdentityUsageDescription = "we don't use your identity. this app run entirely on your device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -432,7 +417,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Battery Reader";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NFCReaderUsageDescription = "Allow Read / Write to battery Tags";
-				INFOPLIST_KEY_NSIdentityUsageDescription = "";
+				INFOPLIST_KEY_NSIdentityUsageDescription = "we don't use your identity. this app run entirely on your device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -463,29 +448,35 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "FRC Battery Reader - Clip/FRC_Battery_Reader___Clip.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 1.01;
 				DEVELOPMENT_TEAM = 53MBHYV2D9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "FRC Battery Reader - Clip/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = FRCBatteryReader;
+				INFOPLIST_KEY_CFBundleDisplayName = "Battery Lite";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NFCReaderUsageDescription = "Allow Read / Write to battery Tags";
 				INFOPLIST_KEY_NSIdentityUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.01;
 				PRODUCT_BUNDLE_IDENTIFIER = IronMaple.FRCBatteryReader.Clip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -496,29 +487,35 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "FRC Battery Reader - Clip/FRC_Battery_Reader___Clip.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 1.01;
 				DEVELOPMENT_TEAM = 53MBHYV2D9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "FRC Battery Reader - Clip/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = FRCBatteryReader;
+				INFOPLIST_KEY_CFBundleDisplayName = "Battery Lite";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NFCReaderUsageDescription = "Allow Read / Write to battery Tags";
 				INFOPLIST_KEY_NSIdentityUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.01;
 				PRODUCT_BUNDLE_IDENTIFIER = IronMaple.FRCBatteryReader.Clip;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

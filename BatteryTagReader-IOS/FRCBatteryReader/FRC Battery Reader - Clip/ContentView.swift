@@ -28,7 +28,7 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity)
                     .appStoreOverlay(isPresented: $showAppStoreOverlay) {
                         // Replace the placeholder with your full app's Apple ID from App Store Connect (App Information → Apple ID)
-                        SKOverlay.AppConfiguration(appIdentifier: "0000000000", position: .bottom)
+                        SKOverlay.AppConfiguration(appIdentifier: "6752791758", position: .bottom)
                     }
             }
 

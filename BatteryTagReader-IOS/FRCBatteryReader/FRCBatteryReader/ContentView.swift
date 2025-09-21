@@ -20,10 +20,12 @@ struct ContentView: View {
                 Button("Init New") { promptInitNew() }
                     .buttonStyle(.borderedProminent)
                     .frame(maxWidth: .infinity)
+                Button("Set Status") {
+                    if nfc.payload != nil { showStatusPicker = true }
+                }
+                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity)
                 Button("Mock Robot") { addUsage(d: 1) }
-                    .buttonStyle(.bordered)
-                    .frame(maxWidth: .infinity)
-                Button("View Logs") { showLogs = true }
                     .buttonStyle(.bordered)
                     .frame(maxWidth: .infinity)
             }
@@ -65,14 +67,16 @@ struct ContentView: View {
         // Bottom actions
         .safeAreaInset(edge: .bottom) {
             HStack(spacing: 8) {
+                // Charged (orange)
                 Button("Charged") { addUsage(d: 2, incrementCycle: true) }
                     .buttonStyle(.borderedProminent)
+                    .tint(.orange)
                     .frame(maxWidth: .infinity)
-                Button("Set Status") {
-                    if nfc.payload != nil { showStatusPicker = true }
-                }
-                .buttonStyle(.bordered)
-                .frame(maxWidth: .infinity)
+                // Scan (blue)
+                Button("Scan") { nfc.begin() }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
+                    .frame(maxWidth: .infinity)
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
@@ -81,11 +85,18 @@ struct ContentView: View {
         .navigationTitle("Battery Tag Reader")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Scan") { nfc.begin() }
+                Button("View Logs") { showLogs = true }
             }
         }
         .sheet(isPresented: $showLogs) {
-            LogsView().environmentObject(store)
+            LogsView(onSimulateScan: { json in
+                if let payload = parseDemoJSON(json) {
+                    // Do not log demo; just load it like a real scan result
+                    nfc.payload = payload
+                }
+                showLogs = false
+            })
+            .environmentObject(store)
         }
         .confirmationDialog("Select Note Type",
                             isPresented: $showStatusPicker,
@@ -175,6 +186,33 @@ struct ContentView: View {
     }
 
     // MARK: - Actions
+
+    /// Parse demo JSON generated from LogsView into BatteryPayload
+    func parseDemoJSON(_ raw: String) -> BatteryPayload? {
+        guard let data = raw.data(using: .utf8) else { return nil }
+        guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+
+        guard let sn = obj["sn"] as? String else { return nil }
+        let fu = (obj["fu"] as? String) ?? "0000000000"
+        let cycle = (obj["cycle"] as? Int) ?? (obj["cc"] as? Int) ?? 0
+        let noteType = (obj["n"] as? Int) ?? 0
+
+        var usage: [UsageEntry] = []
+        if let arr = obj["usage"] as? [[String: Any]] {
+            for e in arr {
+                let i = (e["id"] as? Int) ?? 0
+                let t = (e["t"] as? String) ?? "0000000000"
+                let d = (e["d"] as? Int) ?? 1 // 1 robot, 2 charger (default robot)
+                let en = (e["e"] as? Int) ?? 0
+                let v = (e["v"] as? Int) ?? 0
+                usage.append(UsageEntry(i: i, t: t, d: d, e: en, v: v))
+            }
+        }
+        // Cap to MAX_RECORDS if defined
+        if usage.count > MAX_RECORDS { usage = Array(usage.suffix(MAX_RECORDS)) }
+
+        return BatteryPayload(sn: sn, fu: fu, cc: cycle, n: noteType, u: usage)
+    }
 
     func promptInitNew() {
         var controller: UIAlertController?

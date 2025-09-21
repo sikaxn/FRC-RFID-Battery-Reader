@@ -13,8 +13,8 @@ struct FRCBatteryReaderApp: App {
         WindowGroup {
             NavigationStack {
                 ContentView()
-                    .environmentObject(store)
             }
+            .environmentObject(store)
         }
     }
 }
