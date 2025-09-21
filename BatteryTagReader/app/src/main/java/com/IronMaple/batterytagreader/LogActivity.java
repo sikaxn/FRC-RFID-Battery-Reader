@@ -114,9 +114,9 @@ public class LogActivity extends Activity {
             String demoJson = LogHelper.generateDemoJson();
             Intent i = new Intent(this, MainActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    .putExtra(MainActivity.EXTRA_DEMO_JSON, demoJson);
+                    .putExtra(MainActivity.EXTRA_DEMO_JSON, LogHelper.generateDemoJson())
+                    .putExtra("IS_DEMO", true);   // <<< marker so it won’t be logged
             startActivity(i);
-            Toast.makeText(this, "Demo sent to Main", Toast.LENGTH_SHORT).show();
         });
         row3.addView(demoBtn, btnParams);
 
