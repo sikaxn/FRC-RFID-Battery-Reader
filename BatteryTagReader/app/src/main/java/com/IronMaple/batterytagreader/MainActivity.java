@@ -43,6 +43,9 @@ public class MainActivity extends Activity {
     private JSONObject lastJson = null;
     private static final int MAX_RECORDS = 14;
 
+    // === Added: extra key for demo JSON ===
+    public static final String EXTRA_DEMO_JSON = "com.IronMaple.batterytagreader.EXTRA_DEMO_JSON";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,7 +65,6 @@ public class MainActivity extends Activity {
         Button btnMockRobot = findViewById(R.id.btnMockRobot);
         Button btnViewLogs = findViewById(R.id.btnViewLogs);
 
-
         btnCharged.setOnClickListener(v -> writeChargerSession());
         btnInit.setOnClickListener(v -> promptForSerialNumber());
         btnStatus.setOnClickListener(v -> promptForNoteType());
@@ -71,12 +73,15 @@ public class MainActivity extends Activity {
         btnViewLogs.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, LogActivity.class);
             startActivity(intent);
-
         });
+
+        // Handle a demo payload if we were launched with one
+        handleIntentForDemo(getIntent());
+
         //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
         //    if (!isInLockTaskMode()) {
         //        startLockTask();
-         //   }
+        //   }
         //}
 
     }
@@ -97,8 +102,6 @@ public class MainActivity extends Activity {
         }
     }
 
-
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -110,6 +113,12 @@ public class MainActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+
+        // === Added: if a demo JSON was delivered via intent, handle it first and return ===
+        if (handleIntentForDemo(intent)) {
+            return;
+        }
+
         lastTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         if (lastTag == null) {
             showMessage("No tag detected.");
@@ -137,6 +146,24 @@ public class MainActivity extends Activity {
         } else {
             showMessage("Tag is not NDEF formatted.");
         }
+    }
+
+    // === Added: central handler for demo payloads ===
+    // Returns true if a demo JSON was found and handled.
+    private boolean handleIntentForDemo(Intent intent) {
+        if (intent == null) return false;
+        String demo = intent.getStringExtra(EXTRA_DEMO_JSON);
+        if (demo != null && !demo.isEmpty()) {
+            try {
+                parseAndDisplayJson(demo);
+            } catch (Exception e) {
+                showMessage("Failed to show demo data.");
+            }
+            // prevent re-processing if the intent is reused
+            intent.removeExtra(EXTRA_DEMO_JSON);
+            return true;
+        }
+        return false;
     }
 
     private void parseAndDisplayJson(String rawJson) {
@@ -265,8 +292,6 @@ public class MainActivity extends Activity {
         }
     }
 
-
-
     private void doAddChargerEntry() {
         try {
             JSONArray u = lastJson.optJSONArray("u");
@@ -293,19 +318,14 @@ public class MainActivity extends Activity {
             int cc = lastJson.optInt("cc", 0);
             lastJson.put("cc", cc + 1);
 
-
             if (writeToTag(lastJson.toString())) {
                 LogHelper.log(this, "write", lastJson);
             }
-
-
 
         } catch (Exception e) {
             showMessage("Failed to write charger entry.");
         }
     }
-
-
 
     private void writeRobotSession() {
         if (lastJson == null) {
@@ -335,18 +355,14 @@ public class MainActivity extends Activity {
             while (u.length() > MAX_RECORDS) u.remove(0);
             lastJson.put("u", u);
 
-
             if (writeToTag(lastJson.toString())) {
                 LogHelper.log(this, "write", lastJson);
             }
-
-
 
         } catch (Exception e) {
             showMessage("Failed to mock robot session.");
         }
     }
-
 
     private void promptForSerialNumber() {
         EditText input = new EditText(this);
@@ -364,11 +380,9 @@ public class MainActivity extends Activity {
                         json.put("u", new JSONArray());
                         lastJson = json;
 
-
                         if (writeToTag(lastJson.toString())) {
                             LogHelper.log(this, "write", lastJson);
                         }
-
 
                     } catch (Exception e) {
                         showMessage("Error creating battery record.");
@@ -388,11 +402,9 @@ public class MainActivity extends Activity {
                         }
                         lastJson.put("n", which);
 
-
                         if (writeToTag(lastJson.toString())) {
                             LogHelper.log(this, "write", lastJson);
                         }
-
 
                     } catch (Exception e) {
                         showMessage("Failed to set note.");
@@ -441,13 +453,11 @@ public class MainActivity extends Activity {
         return false;
     }
 
-
     private String currentTimestamp() {
         SimpleDateFormat utcFormat = new SimpleDateFormat("yyMMddHHmm", Locale.US);
         utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         return utcFormat.format(new Date());
     }
-
 
     private void showMessage(String message) {
         resultLayout.removeAllViews();
@@ -529,7 +539,6 @@ public class MainActivity extends Activity {
         }
     }
 
-
     private String getTextFromPayload(byte[] payload) {
         try {
             int langCodeLen = payload[0] & 0x3F;
@@ -538,6 +547,7 @@ public class MainActivity extends Activity {
             return "[Invalid Payload]";
         }
     }
+
     private boolean isInLockTaskMode() {
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -546,6 +556,7 @@ public class MainActivity extends Activity {
             return am.isInLockTaskMode();
         }
     }
+
     private void enableImmersiveMode() {
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY

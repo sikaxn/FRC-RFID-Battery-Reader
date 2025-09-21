@@ -1,14 +1,19 @@
 package com.IronMaple.batterytagreader;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
 
@@ -92,13 +97,46 @@ public class LogActivity extends Activity {
 
         Button clear = new Button(this);
         clear.setText("Clear");
-        clear.setOnClickListener(v -> {
-            LogHelper.clearLog(this);
-            recreate();
-        });
+        clear.setOnClickListener(v -> showClearConfirm());
         row2.addView(clear, btnParams);
 
         root.addView(row2);
+
+// ===== Row 3: Demo / Privacy / Help =====
+        LinearLayout row3 = new LinearLayout(this);
+        row3.setOrientation(LinearLayout.HORIZONTAL);
+        row3.setGravity(Gravity.CENTER);
+        row3.setPadding(0, 0, 0, 16);
+
+        Button demoBtn = new Button(this);
+        demoBtn.setText("Demo");
+        demoBtn.setOnClickListener(v -> {
+            String demoJson = LogHelper.generateDemoJson();
+            Intent i = new Intent(this, MainActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    .putExtra(MainActivity.EXTRA_DEMO_JSON, demoJson);
+            startActivity(i);
+            Toast.makeText(this, "Demo sent to Main", Toast.LENGTH_SHORT).show();
+        });
+        row3.addView(demoBtn, btnParams);
+
+        Button privacyBtn = new Button(this);
+        privacyBtn.setText("Privacy");
+        privacyBtn.setOnClickListener(v -> {
+            Uri u = Uri.parse("https://studenttechsupport.com/privacy");
+            startActivity(new Intent(Intent.ACTION_VIEW, u));
+        });
+        row3.addView(privacyBtn, btnParams);
+
+        Button helpBtn = new Button(this);
+        helpBtn.setText("Help");
+        helpBtn.setOnClickListener(v -> {
+            Uri u = Uri.parse("https://studenttechsupport.com/support");
+            startActivity(new Intent(Intent.ACTION_VIEW, u));
+        });
+        row3.addView(helpBtn, btnParams);
+
+        root.addView(row3);
 
 
 
@@ -199,6 +237,45 @@ public class LogActivity extends Activity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void showClearConfirm() {
+        final AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Clear all logs?")
+                .setMessage("This will erase all saved logs.")
+                .setPositiveButton("Yes (3)", null)
+                .setNegativeButton("No", (d, w) -> d.dismiss())
+                .create();
+
+        dialog.setOnShowListener(dlg -> {
+            final Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            positive.setEnabled(false);
+
+            final Handler h = new Handler(Looper.getMainLooper());
+            final int[] sec = {3};
+            final Runnable tick = new Runnable() {
+                @Override public void run() {
+                    sec[0]--;
+                    if (sec[0] <= 0) {
+                        positive.setText("Yes");
+                        positive.setEnabled(true);
+                    } else {
+                        positive.setText("Yes (" + sec[0] + ")");
+                        h.postDelayed(this, 1000);
+                    }
+                }
+            };
+            h.postDelayed(tick, 1000);
+
+            positive.setOnClickListener(v -> {
+                LogHelper.clearLog(this);
+                Toast.makeText(this, "Logs cleared.", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+                recreate();
+            });
+        });
+
+        dialog.show();
     }
 
     private String formatJsonPretty(JSONObject obj) {

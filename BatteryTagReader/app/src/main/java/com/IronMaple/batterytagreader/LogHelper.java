@@ -67,3 +67,89 @@ public class LogHelper {
     }
 
 }
+
+    // --- Demo JSON generation utilities for MainActivity ---
+    public static String generateDemoJson() {
+        try {
+            JSONObject root = new JSONObject();
+            // Serial number
+            root.put("sn", randomSerial());
+            // Firmware update version (random 1-3 digits)
+            root.put("fu", randBetween(1, 999));
+            // Cycle count (random 0-400)
+            root.put("cc", randBetween(0, 400));
+            // Name (randomly "Main", "Backup", "Test", etc.)
+            String[] names = {"Main", "Backup", "Test", "Spare", "Alpha", "Beta"};
+            root.put("n", names[randBetween(0, names.length - 1)]);
+
+            // Generate u array
+            JSONArray uArr = new JSONArray();
+            int numEntries = randBetween(5, 13);
+            int lastD = -1;
+            for (int i = 1; i <= numEntries; i++) {
+                JSONObject entry = new JSONObject();
+                entry.put("i", i);
+                entry.put("t", randomTimestamp());
+                // d: 1 (robot) or 2 (charger), but no two charger in a row
+                int d;
+                if (lastD == 2) {
+                    d = 1;
+                } else {
+                    d = randBetween(1, 2);
+                }
+                entry.put("d", d);
+                lastD = d;
+                entry.put("e", randBetween(10, 500));
+                entry.put("v", randBetween(7, 14));
+                uArr.put(entry);
+            }
+            root.put("u", uArr);
+            return root.toString();
+        } catch (Exception e) {
+            return "{}";
+        }
+    }
+
+    // Helper: random int between min and max, inclusive
+    private static int randBetween(int min, int max) {
+        return min + (int) (Math.random() * ((max - min) + 1));
+    }
+
+    // Helper: generate plausible timestamp string "yyMMddHHmm", not today, within +/-90 days
+    private static String randomTimestamp() {
+        try {
+            long now = System.currentTimeMillis();
+            // ±90 days in ms
+            long ninetyDays = 90L * 24 * 60 * 60 * 1000;
+            long offset = (long) randBetween((int) -ninetyDays, (int) ninetyDays);
+            long ts = now + offset;
+            SimpleDateFormat fmt = new SimpleDateFormat("yyMMddHHmm", Locale.US);
+            String today = fmt.format(new Date(now));
+            String candidate = fmt.format(new Date(ts));
+            // Avoid today
+            if (candidate.equals(today)) {
+                // Add or subtract a day
+                ts += 24 * 60 * 60 * 1000 * (offset >= 0 ? 1 : -1);
+                candidate = fmt.format(new Date(ts));
+            }
+            return candidate;
+        } catch (Exception e) {
+            return "2301011200";
+        }
+    }
+
+    // Helper: generate plausible serial string
+    private static String randomSerial() {
+        int style = randBetween(0, 2);
+        switch (style) {
+            case 0:
+                // "1234-001"
+                return String.format("%04d-%03d", randBetween(1, 9999), randBetween(1, 999));
+            case 1:
+                // "1----001"
+                return String.format("%d----%03d", randBetween(1, 9), randBetween(1, 999));
+            default:
+                // "12345001"
+                return String.format("%04d%04d", randBetween(1, 9999), randBetween(1, 9999));
+        }
+    }
