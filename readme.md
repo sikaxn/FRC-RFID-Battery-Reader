@@ -18,6 +18,8 @@ https://github.com/sikaxn/FRC-Custom-CAN-Sensor/tree/main/Arduino/Battery_Tracki
 # iOS version
 
 To download iOS version:
+<a href = "https://apps.apple.com/ca/app/frcbatteryreader/id6752791758"><img src="https://github.com/user-attachments/assets/458220ad-f933-4784-be60-1e7de385c11d" /></a>
+
 https://apps.apple.com/ca/app/frcbatteryreader/id6752791758
 
 <img src="img/ios.PNG" style="width:300px; height:auto;" />
