@@ -6,7 +6,7 @@
 
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="Batt Chk"
+        android:label="Battery Reader"
         android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"
         android:lockTaskMode="if_whitelisted"
         android:launchMode="singleTask"

@@ -29,6 +29,9 @@ import java.util.TimeZone;
 
 import android.util.TypedValue;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 
 public class LogActivity extends Activity {
@@ -39,7 +42,14 @@ public class LogActivity extends Activity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(16, 16, 16, 16);
+        root.setPadding(16, 16, 16, 16); // your default
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets sysBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(16 + sysBars.left, 16 + sysBars.top,
+                    16 + sysBars.right, 16 + sysBars.bottom);
+            return insets;
+        });
+
         setContentView(root);
 // ===== Row 1: Exit / Pin / Unpin =====
         LinearLayout row1 = new LinearLayout(this);

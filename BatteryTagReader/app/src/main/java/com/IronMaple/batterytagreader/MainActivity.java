@@ -21,6 +21,11 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -49,7 +54,18 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
+        final View root = findViewById(android.R.id.content);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets sys = insets.getInsets(
+                    WindowInsetsCompat.Type.statusBars() | WindowInsetsCompat.Type.navigationBars()
+            );
+            v.setPadding(v.getPaddingLeft(), sys.top, v.getPaddingRight(), sys.bottom);
+            return insets;
+        });
+
         resultLayout = findViewById(R.id.resultLayout);
 
         showMessage("Hold battery to phone");
@@ -558,14 +574,14 @@ public class MainActivity extends Activity {
     }
 
     private void enableImmersiveMode() {
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-        );
+        //getWindow().getDecorView().setSystemUiVisibility(
+         //       View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+         //               | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+         //               | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+         //               | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+          //              | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+          //              | View.SYSTEM_UI_FLAG_FULLSCREEN
+        //);
     }
 
 }
