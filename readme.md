@@ -6,6 +6,8 @@ https://github.com/sikaxn/FRC-Custom-CAN-Sensor/tree/main/Arduino/Battery_Tracki
 
 # Android version
 
+<a href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"><img style="width:150px; height:auto;" src="https://github.com/user-attachments/assets/7824bf9b-065c-45b6-9597-1626b5ce25a6" /></a>
+
 <img src="img/ui.png" style="width:300px; height:auto;" />
 <img src="img/ui2.png" style="width:300px; height:auto;" />
 
