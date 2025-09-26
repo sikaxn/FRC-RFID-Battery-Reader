@@ -80,7 +80,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "הסוללה טעונה"
+            "value" : "סוללות טעונות"
           }
         },
         "zh-Hans" : {
@@ -192,7 +192,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ספירת מחזור"
+            "value" : "כמות סייקלים"
           }
         },
         "zh-Hans" : {
@@ -779,7 +779,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "לא ניתן לבטל זאת."
+            "value" : "זה לא ניתן לביטול"
           }
         },
         "zh-Hans" : {
