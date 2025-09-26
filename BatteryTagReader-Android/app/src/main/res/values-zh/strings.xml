@@ -27,4 +27,9 @@
     <string name="dialog_no">不了</string>
     <string name="dialog_yes_countdown">好的 (%1$d)</string>
     <string name="toast_logs_cleared">日志已清除</string>
+    <string name="label_serial_number">序列号</string>
+    <string name="label_first_use">首次使用</string>
+    <string name="label_cycle_count">循环次数</string>
+    <string name="label_note_type">备注类型 %1$s</string>
+    <string name="header_usage_log">使用日志:</string>
 </resources>

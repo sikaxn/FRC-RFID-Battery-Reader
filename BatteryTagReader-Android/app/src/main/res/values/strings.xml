@@ -52,6 +52,18 @@
     <string name="utc" translatable="false">UTC</string>
     <string name="provider_suffix" translatable="false">.provider</string>
 
+    <string name="label_serial_number">Serial Number</string>
+    <string name="label_first_use">First Use</string>
+    <string name="label_cycle_count">Cycle Count</string>
+    <string name="label_note_type">Note Type: %1$s</string>
+
+    <string name="header_usage_log">Usage Log:</string>
+
+    <!-- #%1$d = id, %2$s = date/time, %3$s = deviceTypeName(type), %4$d = energy (kJ), %5$d = voltage -->
+    <string name="usage_entry_format" translatable="false">#%1$d: %2$s\n• Device: %3$s\n• Energy: %4$d kJ, Voltage: %5$d</string>
+
+    <!-- %1$s = raw JSON -->
+    <string name="error_invalid_json" translatable="false">Invalid JSON:\n%1$s</string>
 
     <!-- Plurals you’ll likely need -->
     <plurals name="logs_count">

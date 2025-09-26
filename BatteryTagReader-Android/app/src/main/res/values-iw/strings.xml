@@ -27,4 +27,9 @@
     <string name="dialog_no">לֹא</string>
     <string name="dialog_yes_countdown">(%1$d) כֵּן</string>
     <string name="toast_logs_cleared">יומנים נוקו</string>
+    <string name="label_serial_number">מספר סידורי</string>
+    <string name="label_first_use">שימוש ראשון</string>
+    <string name="label_cycle_count">ספירת מחזור</string>
+    <string name="label_note_type">"סוג הערה: %1$s "</string>
+    <string name="header_usage_log">יומן שימוש:</string>
 </resources>
