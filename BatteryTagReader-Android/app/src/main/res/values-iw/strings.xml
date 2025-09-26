@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">קורא תגיות סוללה</string>
+    <string name="btn_init">פתח תג חדש</string>
+    <string name="btn_mock_robot">רובוט מדומה</string>
+    <string name="btn_view_logs">הצג לוגים</string>
+    <string name="btn_charged">הסוללה טעונה</string>
+    <string name="btn_set_status">הגדר הערה</string>
+    <string name="msg_hold_battery">סרוק סוללה קודם</string>
+    <string name="msg_nfc_not_supported">NFC אינו נתמך במכשיר זה.</string>
+    <string name="status_ready">מוּכָן</string>
+    <string name="status_working">סרוק סוללה קודם</string>
+    <string name="error_generic">%1$s שְׁגִיאָה</string>
+    <string name="btn_exit">יְצִיאָה</string>
+    <string name="btn_pin">Pin</string>
+    <string name="btn_unpin">Unpin</string>
+    <string name="btn_export_json">ייצא JSON</string>
+    <string name="btn_export_csv">ייצא CSV</string>
+    <string name="btn_clear">נקה הכל</string>
+    <string name="btn_demo">טען הדגמה</string>
+    <string name="btn_privacy">מדיניות פרטיות</string>
+    <string name="btn_help">קבל עזרה</string>
+    <string name="chooser_share_log_title">לַחֲלוֹק</string>
+    <string name="dialog_clear_logs_title">האם אתה בטוח</string>
+    <string name="dialog_clear_logs_message">לא ניתן לבטל זאת.</string>
+    <string name="dialog_yes">כֵּן</string>
+    <string name="dialog_no">לֹא</string>
+    <string name="dialog_yes_countdown">(%1$d) כֵּן</string>
+    <string name="toast_logs_cleared">יומנים נוקו</string>
+</resources>

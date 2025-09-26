@@ -51,7 +51,8 @@ public class LogActivity extends Activity {
         });
 
         setContentView(root);
-// ===== Row 1: Exit / Pin / Unpin =====
+
+        // ===== Row 1: Exit / Pin / Unpin =====
         LinearLayout row1 = new LinearLayout(this);
         row1.setOrientation(LinearLayout.HORIZONTAL);
         row1.setGravity(Gravity.CENTER);
@@ -60,7 +61,7 @@ public class LogActivity extends Activity {
         LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
 
         Button exitBtn = new Button(this);
-        exitBtn.setText("Exit");
+        exitBtn.setText(getString(R.string.btn_exit));
         exitBtn.setOnClickListener(v -> {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 stopLockTask();
@@ -70,7 +71,7 @@ public class LogActivity extends Activity {
         row1.addView(exitBtn, btnParams);
 
         Button pinBtn = new Button(this);
-        pinBtn.setText("Pin");
+        pinBtn.setText(getString(R.string.btn_pin));
         pinBtn.setOnClickListener(v -> {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 startLockTask();
@@ -79,7 +80,7 @@ public class LogActivity extends Activity {
         row1.addView(pinBtn, btnParams);
 
         Button unpinBtn = new Button(this);
-        unpinBtn.setText("Unpin");
+        unpinBtn.setText(getString(R.string.btn_unpin));
         unpinBtn.setOnClickListener(v -> {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 stopLockTask();
@@ -89,49 +90,49 @@ public class LogActivity extends Activity {
 
         root.addView(row1);
 
-// ===== Row 2: Export JSON / Export CSV / Clear =====
+        // ===== Row 2: Export JSON / Export CSV / Clear =====
         LinearLayout row2 = new LinearLayout(this);
         row2.setOrientation(LinearLayout.HORIZONTAL);
         row2.setGravity(Gravity.CENTER);
         row2.setPadding(0, 0, 0, 16);
 
         Button exportJson = new Button(this);
-        exportJson.setText("Export JSON");
+        exportJson.setText(getString(R.string.btn_export_json));
         exportJson.setOnClickListener(v -> exportFile("log.json", "application/json", true));
         row2.addView(exportJson, btnParams);
 
         Button exportCsv = new Button(this);
-        exportCsv.setText("Export CSV");
+        exportCsv.setText(getString(R.string.btn_export_csv));
         exportCsv.setOnClickListener(v -> exportFile("log.csv", "text/csv", false));
         row2.addView(exportCsv, btnParams);
 
         Button clear = new Button(this);
-        clear.setText("Clear");
+        clear.setText(getString(R.string.btn_clear));
         clear.setOnClickListener(v -> showClearConfirm());
         row2.addView(clear, btnParams);
 
         root.addView(row2);
 
-// ===== Row 3: Demo / Privacy / Help =====
+        // ===== Row 3: Demo / Privacy / Help =====
         LinearLayout row3 = new LinearLayout(this);
         row3.setOrientation(LinearLayout.HORIZONTAL);
         row3.setGravity(Gravity.CENTER);
         row3.setPadding(0, 0, 0, 16);
 
         Button demoBtn = new Button(this);
-        demoBtn.setText("Demo");
+        demoBtn.setText(getString(R.string.btn_demo));
         demoBtn.setOnClickListener(v -> {
             String demoJson = LogHelper.generateDemoJson();
             Intent i = new Intent(this, MainActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)
                     .putExtra(MainActivity.EXTRA_DEMO_JSON, LogHelper.generateDemoJson())
-                    .putExtra("IS_DEMO", true);   // <<< marker so it won’t be logged
+                    .putExtra("IS_DEMO", true);   // marker so it won’t be logged
             startActivity(i);
         });
         row3.addView(demoBtn, btnParams);
 
         Button privacyBtn = new Button(this);
-        privacyBtn.setText("Privacy");
+        privacyBtn.setText(getString(R.string.btn_privacy));
         privacyBtn.setOnClickListener(v -> {
             Uri u = Uri.parse("https://studenttechsupport.com/privacy");
             startActivity(new Intent(Intent.ACTION_VIEW, u));
@@ -139,7 +140,7 @@ public class LogActivity extends Activity {
         row3.addView(privacyBtn, btnParams);
 
         Button helpBtn = new Button(this);
-        helpBtn.setText("Help");
+        helpBtn.setText(getString(R.string.btn_help));
         helpBtn.setOnClickListener(v -> {
             Uri u = Uri.parse("https://studenttechsupport.com/support");
             startActivity(new Intent(Intent.ACTION_VIEW, u));
@@ -147,8 +148,6 @@ public class LogActivity extends Activity {
         row3.addView(helpBtn, btnParams);
 
         root.addView(row3);
-
-
 
         // Scrollable log entries
         ScrollView scroll = new ScrollView(this);
@@ -204,6 +203,7 @@ public class LogActivity extends Activity {
             if (asJson) {
                 writer.write(log.toString(2));
             } else {
+                // Fixed CSV header (do NOT localize)
                 writer.write("Time,Type,Data\n");
                 for (int i = 0; i < log.length(); i++) {
                     JSONObject entry = log.getJSONObject(i);
@@ -214,7 +214,8 @@ public class LogActivity extends Activity {
                         SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
                         utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-                        SimpleDateFormat localFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+                        // Force ASCII digits / stable format regardless of device language
+                        SimpleDateFormat localFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT);
                         localFormat.setTimeZone(TimeZone.getDefault());
 
                         Date parsedUtcDate = utcFormat.parse(utcString);
@@ -228,7 +229,7 @@ public class LogActivity extends Activity {
                     String type = entry.optString("type", "");
                     String data = entry.optJSONObject("data").toString().replace("\"", "'");
 
-                    writer.write(String.format("\"%s\",\"%s\",\"%s\"\n", localTime, type, data));
+                    writer.write(String.format(Locale.ROOT, "\"%s\",\"%s\",\"%s\"\n", localTime, type, data));
                 }
             }
 
@@ -242,7 +243,7 @@ public class LogActivity extends Activity {
                     file
             ));
             share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(share, "Share log file"));
+            startActivity(Intent.createChooser(share, getString(R.string.chooser_share_log_title)));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -251,10 +252,10 @@ public class LogActivity extends Activity {
 
     private void showClearConfirm() {
         final AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Clear all logs?")
-                .setMessage("This will erase all saved logs.")
-                .setPositiveButton("Yes (3)", null)
-                .setNegativeButton("No", (d, w) -> d.dismiss())
+                .setTitle(R.string.dialog_clear_logs_title)
+                .setMessage(R.string.dialog_clear_logs_message)
+                .setPositiveButton(getString(R.string.dialog_yes_countdown, 3), null)
+                .setNegativeButton(R.string.dialog_no, (d, w) -> d.dismiss())
                 .create();
 
         dialog.setOnShowListener(dlg -> {
@@ -267,10 +268,10 @@ public class LogActivity extends Activity {
                 @Override public void run() {
                     sec[0]--;
                     if (sec[0] <= 0) {
-                        positive.setText("Yes");
+                        positive.setText(getString(R.string.dialog_yes));
                         positive.setEnabled(true);
                     } else {
-                        positive.setText("Yes (" + sec[0] + ")");
+                        positive.setText(getString(R.string.dialog_yes_countdown, sec[0]));
                         h.postDelayed(this, 1000);
                     }
                 }
@@ -279,7 +280,7 @@ public class LogActivity extends Activity {
 
             positive.setOnClickListener(v -> {
                 LogHelper.clearLog(this);
-                Toast.makeText(this, "Logs cleared.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.toast_logs_cleared, Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
                 recreate();
             });

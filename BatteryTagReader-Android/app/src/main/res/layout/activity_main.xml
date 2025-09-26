@@ -20,21 +20,21 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Init New" />
+            android:text="@string/btn_init" />
 
         <Button
             android:id="@+id/btnMockRobot"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Mock Robot" />
+            android:text="@string/btn_mock_robot" />
 
         <Button
             android:id="@+id/btnViewLogs"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="View Logs" />
+            android:text="@string/btn_view_logs" />
     </LinearLayout>
 
     <!-- Main Scrollable Result Content -->
@@ -68,13 +68,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Charged" />
+            android:text="@string/btn_charged" />
 
         <Button
             android:id="@+id/btnStatus"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Set Status" />
+            android:text="@string/btn_set_status" />
     </LinearLayout>
 </RelativeLayout>

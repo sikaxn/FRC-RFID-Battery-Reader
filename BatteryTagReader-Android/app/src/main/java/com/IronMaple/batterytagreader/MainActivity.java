@@ -66,12 +66,13 @@ public class MainActivity extends Activity {
 
         resultLayout = findViewById(R.id.resultLayout);
 
-        showMessage("Hold battery to phone");
+        showMessage(getString(R.string.msg_hold_battery));
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (nfcAdapter == null) {
-            showMessage("NFC not supported on this device.");
+            showMessage(getString(R.string.msg_nfc_not_supported));
         }
+
 
         Button btnCharged = findViewById(R.id.btnCharged);
         Button btnInit = findViewById(R.id.btnInit);
@@ -104,6 +105,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         enableImmersiveMode();
+
         if (nfcAdapter != null) {
             Intent intent = new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
             PendingIntent pendingIntent = PendingIntent.getActivity(
@@ -115,6 +117,7 @@ public class MainActivity extends Activity {
             nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, null);
         }
     }
+
 
     @Override
     protected void onPause() {
