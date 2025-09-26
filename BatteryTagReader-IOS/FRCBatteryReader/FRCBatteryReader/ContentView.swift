@@ -34,9 +34,9 @@ struct ContentView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
                     if let p = nfc.payload {
-                        labeled("Serial Number", p.sn)
-                        labeled("First Use", formatUTCStringToLocal(p.fu))
-                        labeled("Cycle Count", String(p.cc))
+                        labeled(Text("Serial Number"), Text(p.sn))
+                        labeled(Text("First Use"), Text(formatUTCStringToLocal(p.fu)))
+                        labeled(Text("Cycle Count"), Text("\(p.cc)"))
                         noteBadge(NoteType(rawValue: p.n) ?? .normal)
 
                         if !p.u.isEmpty {
@@ -124,6 +124,13 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title).font(.caption).foregroundStyle(.secondary)
             Text(value).font(.body)
+        }
+    }
+
+    func labeled(_ title: Text, _ value: Text) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            title.font(.caption).foregroundStyle(.secondary)
+            value.font(.body)
         }
     }
 
