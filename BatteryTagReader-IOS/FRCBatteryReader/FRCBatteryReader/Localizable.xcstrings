@@ -685,7 +685,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "לִקְרוֹא"
+            "value" : "קריאה"
           }
         },
         "tr" : {
@@ -1047,7 +1047,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "לִכתוֹב"
+            "value" : "כתיבה"
           }
         },
         "tr" : {
