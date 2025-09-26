@@ -27,6 +27,12 @@
             "value" : "קורא תגיות סוללה"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pil Etiketi Okuyucu"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -53,6 +59,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "לְבַטֵל"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İptal"
           }
         },
         "zh-Hans" : {
@@ -83,6 +95,12 @@
             "value" : "סוללות טעונות"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şarj Edildi"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -109,6 +127,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "מַטעֵן"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şarj Cihazı"
           }
         },
         "zh-Hans" : {
@@ -139,6 +163,12 @@
             "value" : "נקה הכל"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tümünü Temizle"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -165,6 +195,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "לִסְגוֹר"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapat"
           }
         },
         "zh-Hans" : {
@@ -195,6 +231,12 @@
             "value" : "כמות סייקלים"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Döngü Sayısı"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -221,6 +263,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "למחוק את כל הלוגים?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tüm günlükler silinsin mi?"
           }
         },
         "zh-Hans" : {
@@ -254,6 +302,12 @@
             "value" : "ייצוא נתונים"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dışa Aktar"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -282,6 +336,12 @@
             "value" : "שימוש ראשון"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlk Kullanım"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -308,6 +368,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "קבל עזרה"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yardım Al"
           }
         },
         "zh-Hans" : {
@@ -344,6 +410,12 @@
             "value" : "סרוק סוללה קודם."
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pili telefona tutun"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -378,6 +450,12 @@
             "value" : "פתח תג חדש"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni Başlat"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -404,6 +482,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "טען הדגמה"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demoyu Yükle"
           }
         },
         "zh-Hans" : {
@@ -434,6 +518,12 @@
             "value" : "לוגים"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlükler"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -460,6 +550,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "רובוט מדומה"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahte Robot"
           }
         },
         "zh-Hans" : {
@@ -490,6 +586,12 @@
             "value" : "עדיין אין לוגים"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henüz günlük yok"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -516,6 +618,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "סוג הערה: %@ "
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Türü: %@"
           }
         },
         "zh-Hans" : {
@@ -546,6 +654,12 @@
             "value" : "מדיניות פרטיות"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gizlilik Politikası"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -574,6 +688,12 @@
             "value" : "לִקְרוֹא"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OKU"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -600,6 +720,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "רוֹבּוֹט"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Robot"
           }
         },
         "zh-Hans" : {
@@ -636,6 +762,12 @@
             "value" : "סרוק טאג"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tara"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -664,6 +796,12 @@
             "value" : "בחר סוג הערה"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Türünü Seçin"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -690,6 +828,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "מספר סידורי"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seri Numarası"
           }
         },
         "zh-Hans" : {
@@ -726,6 +870,12 @@
             "value" : "הגדר הערה"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notu Ayarla"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -752,6 +902,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "תְמִיכָה"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destek"
           }
         },
         "zh-Hans" : {
@@ -782,6 +938,12 @@
             "value" : "זה לא ניתן לביטול"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu işlem geri alınamaz."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -808,6 +970,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "יומן שימוש:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanım Günlüğü:"
           }
         },
         "zh-Hans" : {
@@ -846,6 +1014,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "הצג לוגים"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlükleri Gör"
           }
         },
         "zh-Hans" : {
