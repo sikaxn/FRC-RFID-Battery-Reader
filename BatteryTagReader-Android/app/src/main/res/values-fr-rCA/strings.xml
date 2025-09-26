@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lecteur d’étiquettes de batterie</string>
+    <string name="btn_init">Initialiser nouveau</string>
+    <string name="btn_mock_robot">Simuler Robot</string>
+    <string name="btn_view_logs">Voir les journaux</string>
+    <string name="btn_charged">Chargé</string>
+    <string name="btn_set_status">Définir l’état</string>
+    <string name="msg_hold_battery">Approchez la batterie du téléphone</string>
+    <string name="msg_nfc_not_supported">NFC n\'est pas pris en charge sur cet appareil.</string>
+    <string name="status_ready">prêt</string>
+    <string name="status_working">Scanner</string>
+    <string name="error_generic">erreur: %1$s</string>
+    <string name="btn_exit">quitter</string>
+    <string name="btn_export_json">exporter JSON</string>
+    <string name="btn_export_csv">exporter CSV</string>
+    <string name="btn_clear">Effacer tout</string>
+    <string name="btn_demo">Charger la démo</string>
+    <string name="btn_privacy">Politique de confidentialité</string>
+    <string name="btn_help">Assistance</string>
+    <string name="chooser_share_log_title">Partager le fichier journal</string>
+    <string name="dialog_clear_logs_title">pprimer tous les journaux ?</string>
+    <string name="dialog_clear_logs_message">es-tu sûr?</string>
+    <string name="dialog_yes">Oui</string>
+    <string name="dialog_no">Non</string>
+    <string name="dialog_yes_countdown">Oui (%1$d)</string>
+    <string name="toast_logs_cleared">Journaux effacés.</string>
+    <string name="label_serial_number">Numéro de Série</string>
+    <string name="label_first_use">Primer Uso</string>
+    <string name="label_cycle_count">Nombre de cycles</string>
+    <string name="label_note_type">Type de note : %1$s</string>
+    <string name="header_usage_log">Journal d’utilisation :</string>
+</resources>
