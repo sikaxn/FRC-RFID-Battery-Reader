@@ -74,7 +74,7 @@
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chargée"
+            "value" : "Chargé"
           }
         },
         "he" : {
@@ -130,7 +130,7 @@
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tout effacer"
+            "value" : "Effacer tout"
           }
         },
         "he" : {
@@ -273,7 +273,7 @@
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Première utilisation"
+            "value" : "Primer Uso"
           }
         },
         "he" : {
@@ -447,13 +447,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Simular robot"
+            "value" : "Robot Simulado"
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Robot simulé"
+            "value" : "Simuler Robot"
           }
         },
         "he" : {
@@ -627,7 +627,7 @@
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Balayer"
+            "value" : "Scanner"
           }
         },
         "he" : {
@@ -683,7 +683,7 @@
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Serial Number"
+            "value" : "Numéro de Série"
           }
         },
         "he" : {
@@ -745,7 +745,7 @@
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Soutien"
+            "value" : "Assistance"
           }
         },
         "he" : {
