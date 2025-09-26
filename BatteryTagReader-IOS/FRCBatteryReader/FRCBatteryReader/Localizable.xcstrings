@@ -30,7 +30,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pil Etiketi Okuyucu"
+            "value" : "Akü Etiketi Okuyucu"
           }
         },
         "zh-Hans" : {
@@ -98,7 +98,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Şarj Edildi"
+            "value" : "Şarj edildi"
           }
         },
         "zh-Hans" : {
@@ -268,7 +268,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tüm günlükler silinsin mi?"
+            "value" : "Tüm kayıtlar silinsin mi?"
           }
         },
         "zh-Hans" : {
@@ -521,7 +521,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Günlükler"
+            "value" : "Kayıtlar"
           }
         },
         "zh-Hans" : {
@@ -975,7 +975,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kullanım Günlüğü:"
+            "value" : "Kullanım Kayıtlar:"
           }
         },
         "zh-Hans" : {
