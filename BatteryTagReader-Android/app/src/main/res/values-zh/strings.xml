@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">电池标签阅读工具</string>
+    <string name="app_name">电池标签工具</string>
     <string name="btn_init">准备标签</string>
     <string name="btn_mock_robot">模拟机器</string>
     <string name="btn_view_logs">查看日志</string>
