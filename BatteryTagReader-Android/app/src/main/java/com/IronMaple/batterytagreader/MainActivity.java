@@ -66,12 +66,13 @@ public class MainActivity extends Activity {
 
         resultLayout = findViewById(R.id.resultLayout);
 
-        showMessage("Hold battery to phone");
+        showMessage(getString(R.string.msg_hold_battery));
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (nfcAdapter == null) {
-            showMessage("NFC not supported on this device.");
+            showMessage(getString(R.string.msg_nfc_not_supported));
         }
+
 
         Button btnCharged = findViewById(R.id.btnCharged);
         Button btnInit = findViewById(R.id.btnInit);
@@ -104,6 +105,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         enableImmersiveMode();
+
         if (nfcAdapter != null) {
             Intent intent = new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
             PendingIntent pendingIntent = PendingIntent.getActivity(
@@ -115,6 +117,7 @@ public class MainActivity extends Activity {
             nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, null);
         }
     }
+
 
     @Override
     protected void onPause() {
@@ -187,23 +190,25 @@ public class MainActivity extends Activity {
             JSONObject obj = new JSONObject(rawJson);
             lastJson = obj;
 
-            // Avoid logging duplicate reads
+            // Avoid logging duplicate reads (not user-visible; keep as-is)
             if (!obj.toString().equals(LogHelper.getLastLoggedRaw(this))) {
                 LogHelper.log(this, "read", obj);
             }
 
-            addLabel("Serial Number", obj.optString("sn"));
-            addLabel("First Use", formatDateTime(obj.optString("fu")));
-            addLabel("Cycle Count", String.valueOf(obj.optInt("cc")));
+            // Localized labels
+            addLabel(getString(R.string.label_serial_number), obj.optString("sn"));
+            addLabel(getString(R.string.label_first_use), formatDateTime(obj.optString("fu")));
+            addLabel(getString(R.string.label_cycle_count), String.valueOf(obj.optInt("cc")));
 
             // Check for dark mode once
-            int nightModeFlags = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+            int nightModeFlags = getResources().getConfiguration().uiMode
+                    & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
             boolean isDark = nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES;
 
-            // Note Type with background color
+            // Note Type with background color (text localized via format string)
             int noteType = obj.optInt("n");
             TextView noteLabel = new TextView(this);
-            noteLabel.setText("Note Type: " + noteTypeName(noteType));
+            noteLabel.setText(getString(R.string.label_note_type, noteTypeName(noteType)));
             noteLabel.setTextSize(16f);
             noteLabel.setPadding(0, 12, 0, 4);
 
@@ -238,11 +243,11 @@ public class MainActivity extends Activity {
                 // Sort descending by ID
                 entries.sort((a, b) -> Integer.compare(b.optInt("i", 0), a.optInt("i", 0)));
 
-                addHeader("Usage Log:");
+                addHeader(getString(R.string.header_usage_log));
                 for (JSONObject entry : entries) {
                     int type = entry.optInt("d");
-                    String info = String.format(
-                            "#%d: %s\n• Device: %s\n• Energy: %dkJ, Voltage: %d",
+                    String info = getString(
+                            R.string.usage_entry_format,
                             entry.optInt("i"),
                             formatDateTime(entry.optString("t")),
                             deviceTypeName(type),
@@ -268,7 +273,7 @@ public class MainActivity extends Activity {
             }
 
         } catch (Exception e) {
-            showMessage("Invalid JSON:\n" + rawJson);
+            showMessage(getString(R.string.error_invalid_json, rawJson));
         }
     }
 

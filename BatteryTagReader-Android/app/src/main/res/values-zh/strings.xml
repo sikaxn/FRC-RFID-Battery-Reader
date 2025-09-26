@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">电池标签阅读工具</string>
+    <string name="btn_init">准备标签</string>
+    <string name="btn_mock_robot">模拟机器</string>
+    <string name="btn_view_logs">查看日志</string>
+    <string name="btn_charged">已充满电</string>
+    <string name="btn_set_status">设置状态</string>
+    <string name="msg_hold_battery">将手机靠近电池</string>
+    <string name="msg_nfc_not_supported">此设备不支持NFC</string>
+    <string name="status_ready">准备好</string>
+    <string name="status_working">请扫描标签</string>
+    <string name="error_generic">错误: %1$s</string>
+    <string name="btn_exit">退出</string>
+    <string name="btn_pin">置顶</string>
+    <string name="btn_unpin">取消置顶</string>
+    <string name="btn_export_json">导出JSON</string>
+    <string name="btn_export_csv">导出CSV</string>
+    <string name="btn_clear">清除全部</string>
+    <string name="btn_demo">加载演示</string>
+    <string name="btn_privacy">隐私协议</string>
+    <string name="btn_help">获取帮助</string>
+    <string name="chooser_share_log_title">分享日志</string>
+    <string name="dialog_clear_logs_title">真的清除所有日志？</string>
+    <string name="dialog_clear_logs_message">这将删除所有的日志</string>
+    <string name="dialog_yes">好的</string>
+    <string name="dialog_no">不了</string>
+    <string name="dialog_yes_countdown">好的 (%1$d)</string>
+    <string name="toast_logs_cleared">日志已清除</string>
+    <string name="label_serial_number">序列号</string>
+    <string name="label_first_use">首次使用</string>
+    <string name="label_cycle_count">循环次数</string>
+    <string name="label_note_type">备注类型 %1$s</string>
+    <string name="header_usage_log">使用日志:</string>
+</resources>
