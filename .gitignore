@@ -6,3 +6,5 @@ log.json
 /BatteryTagReader-python/venv
 *.xcuserstate
 BatteryTagReader-IOS/FRCBatteryReader/FRCBatteryReader.xcodeproj/project.xcworkspace/xcuserdata/nathan.xcuserdatad/UserInterfaceState.xcuserstate
+/BatteryTagReader/app
+/BatteryTagReader-Android/app/release
