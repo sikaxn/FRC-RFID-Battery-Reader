@@ -1050,6 +1050,12 @@
             "value" : "לִכתוֹב"
           }
         },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YAZ"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
