@@ -282,7 +282,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "סרוק תחילה סוללה."
+            "value" : "סרוק סוללה קודם."
           }
         },
         "zh-Hans" : {
@@ -372,7 +372,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "יומנים"
+            "value" : "לוגים"
           }
         },
         "zh-Hans" : {
@@ -428,7 +428,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "עדיין אין יומנים"
+            "value" : "עדיין אין לוגים"
           }
         },
         "zh-Hans" : {
@@ -574,7 +574,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "סריקה תג"
+            "value" : "סרוק טאג"
           }
         },
         "zh-Hans" : {
@@ -758,7 +758,7 @@
         "he" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "הצג יומנים"
+            "value" : "הצג לוגים"
           }
         },
         "zh-Hans" : {
