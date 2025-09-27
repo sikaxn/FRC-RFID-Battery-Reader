@@ -413,7 +413,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pili telefona tutun"
+            "value" : "Bataryayı telefona yaklaştırın"
           }
         },
         "zh-Hans" : {
@@ -453,13 +453,93 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yeni Başlat"
+            "value" : "Yeni Kurulum"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "准备标签"
+          }
+        }
+      }
+    },
+    "legend_charger" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Charger"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargador"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chargeur"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "מַטעֵן"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şarj Cihazı"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "充电器"
+          }
+        }
+      }
+    },
+    "legend_robot" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Robot"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Robot"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Robot"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "רוֹבּוֹט"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Robot"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "机器人"
           }
         }
       }
@@ -555,7 +635,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahte Robot"
+            "value" : "Örnek Robot"
           }
         },
         "zh-Hans" : {
@@ -589,7 +669,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Henüz günlük yok"
+            "value" : "Henüz kayıt eklenmemiş"
           }
         },
         "zh-Hans" : {
@@ -799,7 +879,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not Türünü Seçin"
+            "value" : "Not türünü seçiniz"
           }
         },
         "zh-Hans" : {
@@ -873,7 +953,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Notu Ayarla"
+            "value" : "Durumu Değiştir"
           }
         },
         "zh-Hans" : {
@@ -975,7 +1055,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kullanım Kayıtlar:"
+            "value" : "Kullanım kaydı"
           }
         },
         "zh-Hans" : {
@@ -1019,7 +1099,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Günlükleri Gör"
+            "value" : "Kayıtları görüntüle"
           }
         },
         "zh-Hans" : {

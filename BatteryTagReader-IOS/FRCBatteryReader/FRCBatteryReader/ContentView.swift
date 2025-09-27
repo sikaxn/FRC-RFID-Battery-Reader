@@ -46,8 +46,8 @@ struct ContentView: View {
 
                             // Legend
                             HStack(spacing: 12) {
-                                legendDot(.green, title: "Robot")
-                                legendDot(.orange, title: "Charger")
+                                legendDot(.green, title: String(localized: "legend_robot"))
+                                legendDot(.orange, title: String(localized: "legend_charger"))
                             }.padding(.bottom, 2)
 
                             ForEach(p.u.sorted { $0.i > $1.i }) { e in
