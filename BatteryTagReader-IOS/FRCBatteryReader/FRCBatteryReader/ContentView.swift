@@ -5,6 +5,7 @@
 
 import SwiftUI
 import UIKit
+import Foundation
 
 struct ContentView: View {
     @StateObject private var nfc = NFCController()
@@ -93,6 +94,8 @@ struct ContentView: View {
                 if let payload = parseDemoJSON(json) {
                     // Do not log demo; just load it like a real scan result
                     nfc.payload = payload
+                    // Play chime for demo loads as well
+                    SoundHelper.shared.play(note: NoteType(rawValue: payload.n) ?? .normal)
                 }
                 showLogs = false
             })
@@ -106,7 +109,19 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            nfc.onReadRaw = { raw in store.log(.read, raw: raw) }
+            nfc.onReadRaw = { raw in
+                // Always log the raw payload.
+                store.log(.read, raw: raw)
+                // Play chime on every successful read, even if the note hasn't changed.
+                if let data = raw.data(using: .utf8),
+                   let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let n = obj["n"] as? Int {
+                    SoundHelper.shared.play(note: NoteType(rawValue: n) ?? .normal)
+                } else if let p = nfc.payload {
+                    // Fallback: if parsing fails, use the last payload in memory.
+                    SoundHelper.shared.play(for: p)
+                }
+            }
             store.load()
         }
     }
