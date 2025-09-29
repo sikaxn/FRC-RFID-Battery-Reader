@@ -20,8 +20,8 @@
 
     <!-- LogActivity buttons -->
     <string name="btn_exit">Exit</string>
-    <string name="btn_pin">Pin</string>
-    <string name="btn_unpin">Unpin</string>
+    <string name="btn_pin" translatable="false">Pin</string>
+    <string name="btn_unpin" translatable="false">Unpin</string>
     <string name="btn_export_json">Export JSON</string>
     <string name="btn_export_csv">Export CSV</string>
     <string name="btn_clear">Clear All</string>

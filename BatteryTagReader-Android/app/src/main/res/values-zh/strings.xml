@@ -12,8 +12,6 @@
     <string name="status_working">请扫描标签</string>
     <string name="error_generic">错误: %1$s</string>
     <string name="btn_exit">退出</string>
-    <string name="btn_pin">置顶</string>
-    <string name="btn_unpin">取消置顶</string>
     <string name="btn_export_json">导出JSON</string>
     <string name="btn_export_csv">导出CSV</string>
     <string name="btn_clear">清除全部</string>

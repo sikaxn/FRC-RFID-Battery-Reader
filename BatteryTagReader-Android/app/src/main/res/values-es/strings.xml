@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lector de etiquetas de batería</string>
+    <string name="btn_init">Inicializar nuevo</string>
+    <string name="btn_mock_robot">Robot Simulado</string>
+    <string name="btn_view_logs">Ver registros</string>
+    <string name="btn_charged">Cargado</string>
+    <string name="btn_set_status">Establecer estado</string>
+    <string name="msg_hold_battery">Mantenga la batería en el teléfono</string>
+    <string name="msg_nfc_not_supported">NFC no es compatible con este dispositivo.</string>
+    <string name="status_ready">listo</string>
+    <string name="status_working">Acerque la batería al teléfono</string>
+    <string name="error_generic">el error: %1$s</string>
+    <string name="btn_exit">Salida</string>
+    <string name="btn_export_json">Exportar JSON</string>
+    <string name="btn_export_csv">Exportar CSV</string>
+    <string name="btn_clear">Borrar todo</string>
+    <string name="btn_demo">Cargar demo</string>
+    <string name="btn_privacy">Política de privacidad</string>
+    <string name="btn_help">Obtener ayuda</string>
+    <string name="chooser_share_log_title">Compartir archivo de registro</string>
+    <string name="dialog_clear_logs_title">Compartir archivo de registro</string>
+    <string name="dialog_clear_logs_message">Estas segura</string>
+    <string name="dialog_yes">Sí</string>
+    <string name="dialog_no">No</string>
+    <string name="dialog_yes_countdown">Sí (%1$d)</string>
+    <string name="toast_logs_cleared">Registros borrados</string>
+    <string name="label_serial_number">Número de serie</string>
+    <string name="label_first_use">Estreno</string>
+    <string name="label_cycle_count">Conteo de ciclos</string>
+    <string name="label_note_type">Tipo de nota:%1$s</string>
+    <string name="header_usage_log">Registro de uso:</string>
+</resources>

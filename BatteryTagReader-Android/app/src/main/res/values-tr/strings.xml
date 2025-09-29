@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Akü Etiketi Okuyucu</string>
+    <string name="btn_init">Yeni Kurulum</string>
+    <string name="btn_mock_robot">Örnek Robot</string>
+    <string name="btn_view_logs">Kayıtları görüntüle</string>
+    <string name="btn_charged">Şarj edildi</string>
+    <string name="btn_set_status">Durumu Değiştir</string>
+    <string name="msg_hold_battery">Pili telefona tutun</string>
+    <string name="msg_nfc_not_supported">Bu cihazda NFC desteklenmiyor.</string>
+    <string name="status_ready">Hazır</string>
+    <string name="status_working">Bataryayı telefona yaklaştırın</string>
+    <string name="error_generic">Hata: %1$</string>
+    <string name="btn_exit">Çıkış</string>
+    <string name="btn_export_json">JSON\'u dışa aktar</string>
+    <string name="btn_export_csv">CSV\'yi dışa aktar</string>
+    <string name="btn_clear">Tümünü Temizle</string>
+    <string name="btn_demo">Demoyu Yükle</string>
+    <string name="btn_privacy">Gizlilik Politikası</string>
+    <string name="btn_help">Yardım Al</string>
+    <string name="chooser_share_log_title">Günlük dosyasını paylaş</string>
+    <string name="dialog_clear_logs_title">Tüm kayıtları temizle?</string>
+    <string name="dialog_clear_logs_message">Emin misin</string>
+    <string name="dialog_yes">Evet</string>
+    <string name="dialog_no">HAYIR</string>
+    <string name="dialog_yes_countdown">Evet (%1$d)</string>
+    <string name="toast_logs_cleared">Günlük temizlendi</string>
+    <string name="label_serial_number">Seri Numarası</string>
+    <string name="label_first_use">İlk Kullanım</string>
+    <string name="label_cycle_count">Döngü Sayısı</string>
+    <string name="label_note_type">Not Türü: %1$s</string>
+    <string name="header_usage_log">Kullanım kaydı</string>
+</resources>

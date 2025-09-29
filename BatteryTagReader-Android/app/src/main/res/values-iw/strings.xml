@@ -12,8 +12,6 @@
     <string name="status_working">סרוק סוללה קודם</string>
     <string name="error_generic">%1$s שְׁגִיאָה</string>
     <string name="btn_exit">יְצִיאָה</string>
-    <string name="btn_pin">Pin</string>
-    <string name="btn_unpin">Unpin</string>
     <string name="btn_export_json">ייצא JSON</string>
     <string name="btn_export_csv">ייצא CSV</string>
     <string name="btn_clear">נקה הכל</string>

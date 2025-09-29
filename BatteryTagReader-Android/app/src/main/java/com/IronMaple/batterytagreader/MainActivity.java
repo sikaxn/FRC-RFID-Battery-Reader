@@ -52,8 +52,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
+
+        SoundHelper.init(this);
+
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         final View root = findViewById(android.R.id.content);
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
@@ -207,6 +209,8 @@ public class MainActivity extends Activity {
 
             // Note Type with background color (text localized via format string)
             int noteType = obj.optInt("n");
+            SoundHelper.playForNoteDelayed(noteType, 50);
+
             TextView noteLabel = new TextView(this);
             noteLabel.setText(getString(R.string.label_note_type, noteTypeName(noteType)));
             noteLabel.setTextSize(16f);
