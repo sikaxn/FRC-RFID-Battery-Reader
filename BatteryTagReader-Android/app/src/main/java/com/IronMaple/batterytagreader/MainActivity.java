@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -13,12 +14,17 @@ import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.core.graphics.Insets;
@@ -388,29 +394,214 @@ public class MainActivity extends Activity {
     }
 
     private void promptForSerialNumber() {
-        EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        new AlertDialog.Builder(this)
-                .setTitle("Enter Serial Number")
-                .setView(input)
-                .setPositiveButton("OK", (dialog, which) -> {
-                    try {
-                        JSONObject json = new JSONObject();
-                        json.put("sn", input.getText().toString());
-                        json.put("fu", currentTimestamp());
-                        json.put("cc", 0);
-                        json.put("n", 0);
-                        json.put("u", new JSONArray());
-                        lastJson = json;
+        // === Load last selections from SharedPreferences ===
+        SharedPreferences prefs = getSharedPreferences("initPrefs", MODE_PRIVATE);
+        int lastMode = prefs.getInt("initMode", 0);         // 0 = Manual, 1 = BEST
+        String lastTeam = prefs.getString("teamNumber", "");
+        int lastType = prefs.getInt("batteryType", 0);      // 0 = New, 1 = Old, 2 = Special
 
-                        if (writeToTag(lastJson.toString())) {
-                            LogHelper.log(this, "write", lastJson);
+        // === Build layout ===
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(40, 30, 40, 10);
+
+        Spinner modeSpinner = new Spinner(this);
+        ArrayAdapter<String> modeAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item,
+                new String[]{"Manual Serial Input", "BEST Scheme"});
+        modeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        modeSpinner.setAdapter(modeAdapter);
+        modeSpinner.setSelection(lastMode);
+        layout.addView(modeSpinner);
+
+        EditText teamInput = new EditText(this);
+        teamInput.setHint("Team Number (1–5 digits)");
+        teamInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        teamInput.setText(lastTeam);
+        layout.addView(teamInput);
+
+        Spinner typeSpinner = new Spinner(this);
+        ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item,
+                new String[]{"New", "Old", "Special"});
+        typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        typeSpinner.setAdapter(typeAdapter);
+        typeSpinner.setSelection(lastType);
+        layout.addView(typeSpinner);
+
+        EditText idInput = new EditText(this);
+        idInput.setHint("Battery ID");
+        idInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        layout.addView(idInput);
+
+        EditText manualInput = new EditText(this);
+        manualInput.setHint("Manual Serial (ASCII ≤ 8 chars)");
+        manualInput.setInputType(InputType.TYPE_CLASS_TEXT);
+        layout.addView(manualInput);
+
+        TextView preview = new TextView(this);
+        preview.setPadding(0, 20, 0, 10);
+        preview.setTextColor(0xFF808080);
+        preview.setText("Incomplete data — preview unavailable");
+        layout.addView(preview);
+
+        // === Prepare holders ===
+        final String[] resultHolder = new String[1];
+
+        // === Create dialog first ===
+        AlertDialog alert = new AlertDialog.Builder(this)
+                .setTitle("Initialize Battery")
+                .setView(layout)
+                .setPositiveButton("OK", null)
+                .setNegativeButton("Cancel", null)
+                .create();
+
+        // === Update logic ===
+        Runnable updatePreview = () -> {
+            int mode = modeSpinner.getSelectedItemPosition();
+            int type = typeSpinner.getSelectedItemPosition();
+            String team = teamInput.getText().toString().trim();
+            String idStr = idInput.getText().toString().trim();
+            String manual = manualInput.getText().toString().trim();
+
+            manualInput.setVisibility(mode == 0 ? View.VISIBLE : View.GONE);
+            teamInput.setVisibility(mode == 1 ? View.VISIBLE : View.GONE);
+            typeSpinner.setVisibility(mode == 1 ? View.VISIBLE : View.GONE);
+            idInput.setVisibility((mode == 1 && type != 2) ? View.VISIBLE : View.GONE);
+
+            String result = null;
+            boolean valid = true;
+
+            if (mode == 0) {
+                if (manual.isEmpty() || manual.length() > 8) {
+                    preview.setText("Incomplete or too long");
+                    preview.setTextColor(0xFFFF0000);
+                    valid = false;
+                } else if (!manual.matches("\\A\\p{ASCII}+\\z")) {
+                    preview.setText("Illegal input (non-ASCII)");
+                    preview.setTextColor(0xFFFF0000);
+                    valid = false;
+                } else {
+                    result = manual;
+                    preview.setText("Preview: " + result);
+                    preview.setTextColor(0xFF00AA00);
+                }
+            } else {
+                if (team.isEmpty() || !team.matches("\\d{1,5}")) {
+                    preview.setText("Incomplete team number");
+                    preview.setTextColor(0xFFFF0000);
+                    valid = false;
+                } else {
+                    while (team.length() < 5) team += "-";
+                    int num = 0;
+                    if (type != 2) {
+                        if (idStr.isEmpty() || !idStr.matches("\\d+")) {
+                            preview.setText("Incomplete ID");
+                            preview.setTextColor(0xFFFF0000);
+                            valid = false;
+                        } else {
+                            num = Integer.parseInt(idStr);
+                        }
+                    }
+
+                    if (valid) {
+                        switch (type) {
+                            case 0:
+                                if (num < 0 || num > 899) {
+                                    preview.setText("Illegal ID (0–899)");
+                                    preview.setTextColor(0xFFFF0000);
+                                    valid = false;
+                                } else {
+                                    result = String.format("%s%03d", team, num);
+                                }
+                                break;
+                            case 1:
+                                if (num < 0 || num > 98) {
+                                    preview.setText("Illegal ID (00–98)");
+                                    preview.setTextColor(0xFFFF0000);
+                                    valid = false;
+                                } else {
+                                    result = String.format("%s9%02d", team, num);
+                                }
+                                break;
+                            case 2:
+                                result = team + "999";
+                                break;
                         }
 
-                    } catch (Exception e) {
-                        showMessage("Error creating battery record.");
+                        if (valid) {
+                            preview.setText("Preview: " + result);
+                            preview.setTextColor(0xFF00AA00);
+                        }
                     }
-                }).setNegativeButton("Cancel", null).show();
+                }
+            }
+
+            resultHolder[0] = result;
+            if (alert.isShowing()) {
+                Button ok = alert.getButton(AlertDialog.BUTTON_POSITIVE);
+                if (ok != null) ok.setEnabled(valid);
+            }
+        };
+
+        alert.setOnShowListener(d -> {
+            Button okButton = alert.getButton(AlertDialog.BUTTON_POSITIVE);
+            okButton.setEnabled(false);
+            okButton.setOnClickListener(v -> {
+                String sn = resultHolder[0];
+                if (sn == null || sn.isEmpty()) return;
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("sn", sn);
+                    json.put("fu", currentTimestamp());
+                    json.put("cc", 0);
+                    json.put("n", 0);
+                    json.put("u", new JSONArray());
+                    lastJson = json;
+
+                    if (writeToTag(lastJson.toString())) {
+                        LogHelper.log(this, "write", lastJson);
+                    }
+
+                    prefs.edit()
+                            .putInt("initMode", modeSpinner.getSelectedItemPosition())
+                            .putString("teamNumber", teamInput.getText().toString().trim())
+                            .putInt("batteryType", typeSpinner.getSelectedItemPosition())
+                            .apply();
+
+                    alert.dismiss();
+                } catch (Exception e) {
+                    showMessage("Error creating battery record.");
+                }
+            });
+
+            TextWatcher watcher = new SimpleTextWatcher(updatePreview);
+            teamInput.addTextChangedListener(watcher);
+            idInput.addTextChangedListener(watcher);
+            manualInput.addTextChangedListener(watcher);
+            modeSpinner.setOnItemSelectedListener(new SimpleItemListener(updatePreview));
+            typeSpinner.setOnItemSelectedListener(new SimpleItemListener(updatePreview));
+
+            updatePreview.run();
+        });
+
+        alert.show();
+    }
+
+    // === small helper classes ===
+    private static class SimpleTextWatcher implements TextWatcher {
+        private final Runnable callback;
+        SimpleTextWatcher(Runnable cb) { this.callback = cb; }
+        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        @Override public void onTextChanged(CharSequence s, int start, int before, int count) { callback.run(); }
+        @Override public void afterTextChanged(Editable s) {}
+    }
+
+    private static class SimpleItemListener implements AdapterView.OnItemSelectedListener {
+        private final Runnable callback;
+        SimpleItemListener(Runnable cb) { this.callback = cb; }
+        @Override public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) { callback.run(); }
+        @Override public void onNothingSelected(AdapterView<?> parent) {}
     }
 
     private void promptForNoteType() {
