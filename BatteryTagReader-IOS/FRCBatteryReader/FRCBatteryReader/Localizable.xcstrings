@@ -7,7 +7,7 @@
     "%lld" : {
 
     },
-    "Battery ID (00–99)" : {
+    "Battery ID (00–98)" : {
 
     },
     "Battery ID (000–899)" : {
@@ -50,7 +50,7 @@
     "Battery Type" : {
 
     },
-    "BEST Battery ID Format: tttttnnn — team padded to 5, nnn = 000–899 or 00–99. Reserved 900–999." : {
+    "BEST Battery ID Format: tttttnnn — team padded to 5, nnn = 000–899 (New), 00–98 (Old), 999 (Special). Reserved 900–999." : {
 
     },
     "BEST Scheme" : {
@@ -439,6 +439,12 @@
         }
       }
     },
+    "Illegal input" : {
+
+    },
+    "Incomplete data — preview unavailable" : {
+
+    },
     "Init New" : {
       "localizations" : {
         "en" : {
@@ -744,6 +750,9 @@
     "Old" : {
 
     },
+    "Preview: %@" : {
+
+    },
     "Privacy Policy" : {
       "localizations" : {
         "es" : {
@@ -996,6 +1005,12 @@
           }
         }
       }
+    },
+    "Special" : {
+
+    },
+    "Special: Serial Number will end in 999." : {
+
     },
     "Support" : {
       "localizations" : {

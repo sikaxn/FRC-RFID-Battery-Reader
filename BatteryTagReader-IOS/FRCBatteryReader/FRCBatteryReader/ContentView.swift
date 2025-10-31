@@ -16,10 +16,10 @@ struct ContentView: View {
 
     // New state variables for init new sheet
     @State private var showInitSheet = false
-    @State private var initMode = 0
+    @AppStorage("initMode") private var initMode = 0
     @State private var manualSN = ""
-    @State private var teamNumber = ""
-    @State private var isNewBattery = true
+    @AppStorage("teamNumber") private var teamNumber = ""
+    @AppStorage("batteryType") private var batteryType = 0 // 0: New, 1: Old, 2: Special
     @State private var batteryID = ""
 
     var body: some View {
@@ -131,20 +131,57 @@ struct ContentView: View {
                             manualSN = String(newValue.prefix(8).filter { $0.isASCII })
                         }
                 } else {
+                    // Show Team Number for all modes except manual
                     TextField("Team Number (max 5 digits)", text: $teamNumber)
                         .keyboardType(.numberPad)
                         .textFieldStyle(.roundedBorder)
-                    Picker("Battery Type", selection: $isNewBattery) {
-                        Text("New").tag(true)
-                        Text("Old").tag(false)
+                        .onChange(of: teamNumber) { _, newValue in
+                            teamNumber = String(newValue.prefix(5).filter { $0.isNumber })
+                        }
+                    Picker("Battery Type", selection: $batteryType) {
+                        Text("New").tag(0)
+                        Text("Old").tag(1)
+                        Text("Special").tag(2)
                     }
                     .pickerStyle(.segmented)
-                    TextField(isNewBattery ? "Battery ID (000–899)" : "Battery ID (00–99)", text: $batteryID)
-                        .keyboardType(.numberPad)
-                        .textFieldStyle(.roundedBorder)
-                    Text("BEST Battery ID Format: tttttnnn — team padded to 5, nnn = 000–899 or 00–99. Reserved 900–999.")
+                    if batteryType == 0 {
+                        TextField("Battery ID (000–899)", text: $batteryID)
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(.roundedBorder)
+                            .onChange(of: batteryID) { _, newValue in
+                                let maxLen = 3
+                                batteryID = String(newValue.prefix(maxLen).filter { $0.isNumber })
+                            }
+                    } else if batteryType == 1 {
+                        TextField("Battery ID (00–98)", text: $batteryID)
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(.roundedBorder)
+                            .onChange(of: batteryID) { _, newValue in
+                                let maxLen = 2
+                                batteryID = String(newValue.prefix(maxLen).filter { $0.isNumber })
+                            }
+                    } else if batteryType == 2 {
+                        Text("Special: Serial Number will end in 999.")
+                            .foregroundColor(.secondary)
+                    }
+                    Text("BEST Battery ID Format: tttttnnn — team padded to 5, nnn = 000–899 (New), 00–98 (Old), 999 (Special). Reserved 900–999.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                }
+
+                // Live preview area
+                let preview = generatePreview()
+                if preview == "Illegal input" {
+                    Text("Illegal input")
+                        .font(.headline)
+                        .foregroundColor(.red)
+                } else if let preview = preview {
+                    Text("Preview: \(preview)")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                } else {
+                    Text("Incomplete data — preview unavailable")
+                        .foregroundColor(.secondary)
                 }
 
                 HStack {
@@ -152,6 +189,7 @@ struct ContentView: View {
                     Spacer()
                     Button("OK") { confirmInit() }
                         .buttonStyle(.borderedProminent)
+                        .disabled(generatePreview() == nil || generatePreview() == "Illegal input")
                 }
             }
             .padding()
@@ -313,19 +351,7 @@ struct ContentView: View {
     */
 
     func confirmInit() {
-        let sn: String
-        if initMode == 0 {
-            guard !manualSN.isEmpty else { return }
-            sn = manualSN
-        } else {
-            guard let team = Int(teamNumber), !batteryID.isEmpty else { return }
-            guard let id = Int(batteryID) else { return }
-            if isNewBattery && !(0...899).contains(id) { return }
-            if !isNewBattery && !(0...99).contains(id) { return }
-            let teamStr = String(format: "%05d", team)
-            let padded = String(repeating: "-", count: max(0, 5 - teamStr.count)) + teamStr
-            sn = padded + String(format: isNewBattery ? "%03d" : "%02d", id)
-        }
+        guard let sn = generatePreview() else { return }
         var p = BatteryPayload(sn: sn, fu: currentTimestampUTC(), cc: 0, n: 0, u: [])
         if p.u.count > MAX_RECORDS { p.u = Array(p.u.suffix(MAX_RECORDS)) }
         nfc.write(p) { raw in
@@ -333,6 +359,35 @@ struct ContentView: View {
             nfc.payload = p
         }
         showInitSheet = false
+    }
+
+    // Helper function for live preview and confirmInit
+    func generatePreview() -> String? {
+        if initMode == 0 {
+            guard !manualSN.isEmpty else { return nil }
+            return manualSN
+        }
+        // Team number validation
+        guard teamNumber.count > 0 else { return nil }
+        guard let team = Int(teamNumber) else { return "Illegal input" }
+        let teamStr = String(team)
+        let paddedTeam = teamStr + String(repeating: "-", count: max(0, 5 - teamStr.count))
+        switch batteryType {
+        case 0: // New
+            guard batteryID.count > 0 else { return nil }
+            guard let id = Int(batteryID) else { return "Illegal input" }
+            guard (0...899).contains(id) else { return "Illegal input" }
+            return paddedTeam + String(format: "%03d", id)
+        case 1: // Old
+            guard batteryID.count > 0 else { return nil }
+            guard let id = Int(batteryID) else { return "Illegal input" }
+            guard (0...98).contains(id) else { return "Illegal input" }
+            return paddedTeam + String(format: "9%02d", id)
+        case 2: // Special
+            return paddedTeam + "999"
+        default:
+            return nil
+        }
     }
 
     func addUsage(d: Int, incrementCycle: Bool = false) {
