@@ -170,8 +170,8 @@ struct LogsView: View {
 
         // Generate usage records with incrementing ids and random times within last year
         var usage: [[String: Any]] = []
-        let cal = Calendar.current
-        let now = Date()
+        //let cal = Calendar.current
+        //let now = Date()
         let fmt = DateFormatter()
         fmt.timeZone = TimeZone(identifier: "America/Toronto")
         fmt.dateFormat = "yyMMddHHmm" // YYMMDDHHMM

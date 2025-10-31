@@ -14,11 +14,19 @@ struct ContentView: View {
     @State private var showLogs = false
     @State private var showStatusPicker = false
 
+    // New state variables for init new sheet
+    @State private var showInitSheet = false
+    @State private var initMode = 0
+    @State private var manualSN = ""
+    @State private var teamNumber = ""
+    @State private var isNewBattery = true
+    @State private var batteryID = ""
+
     var body: some View {
         VStack(spacing: 12) {
             // Top actions
             HStack(spacing: 8) {
-                Button("Init New") { promptInitNew() }
+                Button("Init New") { showInitSheet = true }
                     .buttonStyle(.borderedProminent)
                     .frame(maxWidth: .infinity)
                 Button("Set Status") {
@@ -107,6 +115,47 @@ struct ContentView: View {
             ForEach(NoteType.allCases) { t in
                 Button(t.title) { setStatus(t) }
             }
+        }
+        .sheet(isPresented: $showInitSheet) {
+            VStack(spacing: 16) {
+                Picker("Mode", selection: $initMode) {
+                    Text("Manual").tag(0)
+                    Text("BEST Scheme").tag(1)
+                }
+                .pickerStyle(.segmented)
+
+                if initMode == 0 {
+                    TextField("Serial Number (ASCII, max 8)", text: $manualSN)
+                        .textFieldStyle(.roundedBorder)
+                        .onChange(of: manualSN) { _, newValue in
+                            manualSN = String(newValue.prefix(8).filter { $0.isASCII })
+                        }
+                } else {
+                    TextField("Team Number (max 5 digits)", text: $teamNumber)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
+                    Picker("Battery Type", selection: $isNewBattery) {
+                        Text("New").tag(true)
+                        Text("Old").tag(false)
+                    }
+                    .pickerStyle(.segmented)
+                    TextField(isNewBattery ? "Battery ID (000–899)" : "Battery ID (00–99)", text: $batteryID)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
+                    Text("BEST Battery ID Format: tttttnnn — team padded to 5, nnn = 000–899 or 00–99. Reserved 900–999.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                HStack {
+                    Button("Cancel") { showInitSheet = false }
+                    Spacer()
+                    Button("OK") { confirmInit() }
+                        .buttonStyle(.borderedProminent)
+                }
+            }
+            .padding()
+            .presentationDetents([.medium])
         }
         .onAppear {
             nfc.onReadRaw = { raw in
@@ -236,6 +285,8 @@ struct ContentView: View {
         return BatteryPayload(sn: sn, fu: fu, cc: cycle, n: noteType, u: usage)
     }
 
+    /*
+    // Original UIAlertController-based promptInitNew implementation commented out for reference
     func promptInitNew() {
         var controller: UIAlertController?
         controller = UIAlertController(title: "Enter Serial Number", message: nil, preferredStyle: .alert)
@@ -258,6 +309,30 @@ struct ContentView: View {
             }
         }))
         UIApplication.shared.keyWindowTop?.present(controller!, animated: true)
+    }
+    */
+
+    func confirmInit() {
+        let sn: String
+        if initMode == 0 {
+            guard !manualSN.isEmpty else { return }
+            sn = manualSN
+        } else {
+            guard let team = Int(teamNumber), !batteryID.isEmpty else { return }
+            guard let id = Int(batteryID) else { return }
+            if isNewBattery && !(0...899).contains(id) { return }
+            if !isNewBattery && !(0...99).contains(id) { return }
+            let teamStr = String(format: "%05d", team)
+            let padded = String(repeating: "-", count: max(0, 5 - teamStr.count)) + teamStr
+            sn = padded + String(format: isNewBattery ? "%03d" : "%02d", id)
+        }
+        var p = BatteryPayload(sn: sn, fu: currentTimestampUTC(), cc: 0, n: 0, u: [])
+        if p.u.count > MAX_RECORDS { p.u = Array(p.u.suffix(MAX_RECORDS)) }
+        nfc.write(p) { raw in
+            store.log(.write, raw: raw)
+            nfc.payload = p
+        }
+        showInitSheet = false
     }
 
     func addUsage(d: Int, incrementCycle: Bool = false) {

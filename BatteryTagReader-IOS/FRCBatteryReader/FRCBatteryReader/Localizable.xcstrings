@@ -7,6 +7,12 @@
     "%lld" : {
 
     },
+    "Battery ID (00–99)" : {
+
+    },
+    "Battery ID (000–899)" : {
+
+    },
     "Battery Tag Reader" : {
       "localizations" : {
         "es" : {
@@ -40,6 +46,15 @@
           }
         }
       }
+    },
+    "Battery Type" : {
+
+    },
+    "BEST Battery ID Format: tttttnnn — team padded to 5, nnn = 000–899 or 00–99. Reserved 900–999." : {
+
+    },
+    "BEST Scheme" : {
+
     },
     "Cancel" : {
       "localizations" : {
@@ -612,6 +627,9 @@
         }
       }
     },
+    "Manual" : {
+
+    },
     "Mock Robot" : {
       "localizations" : {
         "es" : {
@@ -645,6 +663,12 @@
           }
         }
       }
+    },
+    "Mode" : {
+
+    },
+    "New" : {
+
     },
     "No logs yet" : {
       "localizations" : {
@@ -713,6 +737,12 @@
           }
         }
       }
+    },
+    "OK" : {
+
+    },
+    "Old" : {
+
     },
     "Privacy Policy" : {
       "localizations" : {
@@ -924,6 +954,9 @@
         }
       }
     },
+    "Serial Number (ASCII, max 8)" : {
+
+    },
     "Set Status" : {
       "localizations" : {
         "en" : {
@@ -997,6 +1030,9 @@
           }
         }
       }
+    },
+    "Team Number (max 5 digits)" : {
+
     },
     "This cannot be undone." : {
       "localizations" : {
