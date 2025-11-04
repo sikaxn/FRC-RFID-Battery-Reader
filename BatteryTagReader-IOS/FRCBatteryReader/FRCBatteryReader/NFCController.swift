@@ -10,6 +10,7 @@ import OSLog
 
 final class NFCController: NSObject, ObservableObject {
     @Published var payload: BatteryPayload? = nil
+    @Published var canWriteTag: Bool = false
 
     // Single CoreNFC session (we use NDEF for both read and write)
     var readSession: NFCNDEFReaderSession?

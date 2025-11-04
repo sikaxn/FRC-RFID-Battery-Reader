@@ -6,9 +6,9 @@
 import SwiftUI
 import UIKit
 import Foundation
-
+import Combine
 struct ContentView: View {
-    @StateObject private var nfc = NFCController()
+    @EnvironmentObject var nfc: NFCController
     @EnvironmentObject var store: LogStore
 
     @State private var showLogs = false
@@ -26,17 +26,24 @@ struct ContentView: View {
         VStack(spacing: 12) {
             // Top actions
             HStack(spacing: 8) {
-                Button("Init New") { showInitSheet = true }
-                    .buttonStyle(.borderedProminent)
-                    .frame(maxWidth: .infinity)
+                Button("Init New") {
+                    nfc.canWriteTag = false
+                    showInitSheet = true
+                }
+                .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity)
                 Button("Set Status") {
+                    nfc.canWriteTag = false
                     if nfc.payload != nil { showStatusPicker = true }
                 }
                 .buttonStyle(.bordered)
                 .frame(maxWidth: .infinity)
-                Button("Mock Robot") { addUsage(d: 1) }
-                    .buttonStyle(.bordered)
-                    .frame(maxWidth: .infinity)
+                Button("Mock Robot") {
+                    nfc.canWriteTag = false
+                    addUsage(d: 1)
+                }
+                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity)
             }
 
             // Content
@@ -77,12 +84,36 @@ struct ContentView: View {
         .safeAreaInset(edge: .bottom) {
             HStack(spacing: 8) {
                 // Charged (orange)
-                Button("Charged") { addUsage(d: 2, incrementCycle: true) }
+                Button("Charged") {
+                    addUsage(d: 2, incrementCycle: true)
+                    nfc.canWriteTag = false
+                }
                     .buttonStyle(.borderedProminent)
                     .tint(.orange)
                     .frame(maxWidth: .infinity)
+                // Write Tag (red) - appears only when canWriteTag is true and nfc.payload != nil
+                if nfc.canWriteTag, nfc.payload != nil {
+                    Button("Write Tag") {
+                        if let payload = nfc.payload {
+                            nfc.canWriteTag = false
+                            nfc.write(payload) { raw in
+                                store.log(.write, raw: raw)
+                                SoundHelper.shared.play(note: NoteType(rawValue: payload.n) ?? .normal)
+                            }
+                        } else {
+                            nfc.canWriteTag = false
+                            nfc.begin()
+                        }
+                    }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                        .frame(maxWidth: .infinity)
+                }
                 // Scan (blue)
-                Button("Scan") { nfc.begin() }
+                Button("Scan") {
+                    nfc.canWriteTag = false
+                    nfc.begin()
+                }
                     .buttonStyle(.borderedProminent)
                     .tint(.blue)
                     .frame(maxWidth: .infinity)
@@ -93,7 +124,11 @@ struct ContentView: View {
         }
         .navigationTitle("Battery Tag Reader")
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button(action: { shareBatteryJSON() }) {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .accessibilityLabel("Share")
                 Button("View Logs") { showLogs = true }
             }
         }
@@ -102,6 +137,7 @@ struct ContentView: View {
                 if let payload = parseDemoJSON(json) {
                     // Do not log demo; just load it like a real scan result
                     nfc.payload = payload
+                    nfc.canWriteTag = false
                     // Play chime for demo loads as well
                     SoundHelper.shared.play(note: NoteType(rawValue: payload.n) ?? .normal)
                 }
@@ -208,6 +244,8 @@ struct ContentView: View {
                     // Fallback: if parsing fails, use the last payload in memory.
                     SoundHelper.shared.play(for: p)
                 }
+                // Reset canWriteTag after scanning a new tag
+                nfc.canWriteTag = false
             }
             store.load()
         }
@@ -357,6 +395,7 @@ struct ContentView: View {
         nfc.write(p) { raw in
             store.log(.write, raw: raw)
             nfc.payload = p
+            nfc.canWriteTag = false
         }
         showInitSheet = false
     }
@@ -420,6 +459,91 @@ struct ContentView: View {
         nfc.write(p) { raw in
             store.log(.write, raw: raw)
             nfc.payload = p
+            nfc.canWriteTag = false
+        }
+    }
+
+    // MARK: - Share functionality
+    @State private var showShareSheet = false
+    @State private var shareURL: URL?
+    @State private var showShareAlert = false
+
+    func shareBatteryJSON() {
+        // Determine which JSON to use: current payload or demo payload
+        guard let payload = nfc.payload else {
+            // Show alert if no tag loaded
+            let ac = UIAlertController(title: "No tag loaded", message: "Scan a battery tag first.", preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            UIApplication.shared.keyWindowTop?.present(ac, animated: true)
+            return
+        }
+        // Convert payload to JSON dictionary
+        let dict: [String: Any] = [
+            "sn": payload.sn,
+            "fu": payload.fu,
+            "cc": payload.cc,
+            "n": payload.n,
+            "usage": payload.u.map { e in
+                [
+                    "id": e.i,
+                    "t": e.t,
+                    "d": e.d,
+                    "e": e.e,
+                    "v": e.v
+                ]
+            }
+        ]
+        do {
+            let data = try JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted])
+            let fileManager = FileManager.default
+            let tmpDir = fileManager.temporaryDirectory
+            let fileName = "\(payload.sn).BEST.json"
+            let fileURL = tmpDir.appendingPathComponent(fileName)
+            try data.write(to: fileURL)
+            // Present share sheet
+            let activityVC = UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let root = scene.windows.first?.rootViewController {
+                root.present(activityVC, animated: true)
+            }
+        } catch {
+            let ac = UIAlertController(title: "Export failed", message: "Could not export battery JSON.", preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            UIApplication.shared.keyWindowTop?.present(ac, animated: true)
+        }
+    }
+
+    // MARK: - Import functionality
+    /// Load a JSON file from a URL, parse, update NFC payload, log and chime.
+    func handleIncomingJSON(_ url: URL) {
+        do {
+            let data = try Data(contentsOf: url)
+            guard let jsonStr = String(data: data, encoding: .utf8) else { return }
+
+            if let payload = parseDemoJSON(jsonStr) {
+                // Update current NFC payload
+                nfc.payload = payload
+                // Log the imported data
+                store.log(.read, raw: jsonStr)
+                // Play the appropriate chime
+                SoundHelper.shared.play(note: NoteType(rawValue: payload.n) ?? .normal)
+                // Allow writing this imported tag
+                nfc.canWriteTag = true
+            } else {
+                print("Invalid battery JSON structure.")
+            }
+        } catch {
+            print("Failed to open JSON from URL: \(error)")
+        }
+    }
+
+    // Write imported JSON data to NFC tag
+    func writeTagFromImportedJSON() {
+        guard let payload = nfc.payload else { return }
+        nfc.write(payload) { raw in
+            store.log(.write, raw: raw)
+            SoundHelper.shared.play(note: NoteType(rawValue: payload.n) ?? .normal)
+            nfc.canWriteTag = false
         }
     }
 }
