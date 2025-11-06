@@ -191,7 +191,7 @@ struct ContentView: View {
                         Text("Special: Serial Number will end in 999.")
                             .foregroundColor(.secondary)
                     }
-                    Text("BEST Battery ID Format: tttttnnn — team padded to 5, nnn = 000–899 (New), 00–98 (Old), 999 (Special). Reserved 900–999.")
+                    Text("BEST Battery ID Format: tttttnnn — team padded to 5, nnn = 000–899 (New), 900–998 (Old), 999 (Special).")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
