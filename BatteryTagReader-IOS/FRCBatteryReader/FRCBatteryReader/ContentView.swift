@@ -40,7 +40,7 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity)
                 Button("Mock Robot") {
                     nfc.canWriteTag = false
-                    addUsage(d: 1)
+                    performWrite(addUsageType: 1)
                 }
                 .buttonStyle(.bordered)
                 .frame(maxWidth: .infinity)
@@ -85,8 +85,8 @@ struct ContentView: View {
             HStack(spacing: 8) {
                 // Charged (orange)
                 Button("Charged") {
-                    addUsage(d: 2, incrementCycle: true)
                     nfc.canWriteTag = false
+                    performWrite(addUsageType: 2, incrementCycle: true)
                 }
                     .buttonStyle(.borderedProminent)
                     .tint(.orange)
@@ -94,16 +94,7 @@ struct ContentView: View {
                 // Write Tag (red) - appears only when canWriteTag is true and nfc.payload != nil
                 if nfc.canWriteTag, nfc.payload != nil {
                     Button("Write Tag") {
-                        if let payload = nfc.payload {
-                            nfc.canWriteTag = false
-                            nfc.write(payload) { raw in
-                                store.log(.write, raw: raw)
-                                SoundHelper.shared.play(note: NoteType(rawValue: payload.n) ?? .normal)
-                            }
-                        } else {
-                            nfc.canWriteTag = false
-                            nfc.begin()
-                        }
+                        performWrite()
                     }
                         .buttonStyle(.borderedProminent)
                         .tint(.red)
@@ -392,11 +383,8 @@ struct ContentView: View {
         guard let sn = generatePreview() else { return }
         var p = BatteryPayload(sn: sn, fu: currentTimestampUTC(), cc: 0, n: 0, u: [])
         if p.u.count > MAX_RECORDS { p.u = Array(p.u.suffix(MAX_RECORDS)) }
-        nfc.write(p) { raw in
-            store.log(.write, raw: raw)
-            nfc.payload = p
-            nfc.canWriteTag = false
-        }
+        nfc.payload = p
+        performWrite()
         showInitSheet = false
     }
 
@@ -429,24 +417,7 @@ struct ContentView: View {
         }
     }
 
-    func addUsage(d: Int, incrementCycle: Bool = false) {
-        guard var p = nfc.payload else {
-            let ac = UIAlertController(title: "No tag loaded", message: "Scan a battery tag first.", preferredStyle: .alert)
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
-            UIApplication.shared.keyWindowTop?.present(ac, animated: true)
-            return
-        }
-        let maxId = p.u.map { $0.i }.max() ?? 0
-        let entry = UsageEntry(i: maxId + 1, t: currentTimestampUTC(), d: d, e: 0, v: 0)
-        p.u.append(entry)
-        if p.u.count > MAX_RECORDS { p.u.removeFirst(p.u.count - MAX_RECORDS) }
-        if incrementCycle { p.cc += 1 }
-
-        nfc.write(p) { raw in
-            store.log(.write, raw: raw)
-            nfc.payload = p
-        }
-    }
+    // addUsage is now replaced by performWrite
 
     func setStatus(_ t: NoteType) {
         guard var p = nfc.payload else {
@@ -456,11 +427,8 @@ struct ContentView: View {
             return
         }
         p.n = t.rawValue
-        nfc.write(p) { raw in
-            store.log(.write, raw: raw)
-            nfc.payload = p
-            nfc.canWriteTag = false
-        }
+        nfc.payload = p
+        performWrite()
     }
 
     // MARK: - Share functionality
@@ -546,4 +514,29 @@ struct ContentView: View {
             nfc.canWriteTag = false
         }
     }
-}
+    // MARK: - Centralized NFC Write Helper
+    /// Helper to perform NFC tag write, optionally appending a usage entry and/or incrementing cycle count.
+    func performWrite(addUsageType d: Int? = nil, incrementCycle: Bool = false) {
+        guard var p = nfc.payload else {
+            let ac = UIAlertController(title: "No tag loaded", message: "Scan a battery tag first.", preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            UIApplication.shared.keyWindowTop?.present(ac, animated: true)
+            return
+        }
+
+        if let d = d {
+            let maxId = p.u.map { $0.i }.max() ?? 0
+            let entry = UsageEntry(i: maxId + 1, t: currentTimestampUTC(), d: d, e: 0, v: 0)
+            p.u.append(entry)
+            if p.u.count > MAX_RECORDS { p.u.removeFirst(p.u.count - MAX_RECORDS) }
+            if incrementCycle { p.cc += 1 }
+        }
+
+        nfc.write(p) { raw in
+            store.log(.write, raw: raw)
+            nfc.payload = p
+            nfc.canWriteTag = false
+            SoundHelper.shared.play(note: NoteType(rawValue: p.n) ?? .normal)
+        }
+    }
+} 
