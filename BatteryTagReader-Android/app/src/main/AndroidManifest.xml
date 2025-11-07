@@ -39,6 +39,21 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <activity android:name=".ImportActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- Allow opening .json files -->
+                <data android:mimeType="application/json" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+            </intent-filter>
+        </activity>
+
+
 
     </application>
 </manifest>

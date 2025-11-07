@@ -1,12 +1,16 @@
 package com.IronMaple.batterytagreader;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -27,6 +31,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -35,6 +40,8 @@ import androidx.core.view.WindowInsetsCompat;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -87,6 +94,9 @@ public class MainActivity extends Activity {
         Button btnStatus = findViewById(R.id.btnStatus);
         Button btnMockRobot = findViewById(R.id.btnMockRobot);
         Button btnViewLogs = findViewById(R.id.btnViewLogs);
+        Button btnExportJson = findViewById(R.id.btnExportJson);
+        btnExportJson.setOnClickListener(v -> exportJson());
+
 
         btnCharged.setOnClickListener(v -> writeChargerSession());
         btnInit.setOnClickListener(v -> promptForSerialNumber());
@@ -106,6 +116,21 @@ public class MainActivity extends Activity {
         //        startLockTask();
         //   }
         //}
+        IntentFilter filter = new IntentFilter("com.IronMaple.batterytagreader.LOAD_JSON");
+        registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                try {
+                    String jsonStr = intent.getStringExtra("json");
+                    if (jsonStr != null && !jsonStr.isEmpty()) {
+                        parseAndDisplayJson(jsonStr);
+                        LogHelper.log(MainActivity.this, "view_import", new JSONObject(jsonStr));
+                    }
+                } catch (Exception e) {
+                    showMessage("Error loading imported JSON: " + e.getMessage());
+                }
+            }
+        }, filter, RECEIVER_NOT_EXPORTED);
 
     }
 
@@ -139,11 +164,31 @@ public class MainActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        // === Added: if a demo JSON was delivered via intent, handle it first and return ===
+        // === 1. Handle incoming JSON from ImportActivity ===
+        if (intent.hasExtra("WRITE_JSON_DIRECT")) {
+            try {
+                String jsonStr = intent.getStringExtra("WRITE_JSON_DIRECT");
+                if (jsonStr != null && !jsonStr.isEmpty()) {
+                    lastJson = new JSONObject(jsonStr);
+                    // Direct NFC write
+                    if (writeToTag(lastJson.toString())) {
+                        LogHelper.log(this, "write", lastJson);
+                    }
+                } else {
+                    showMessage("No JSON data provided.");
+                }
+            } catch (Exception e) {
+                showMessage("Error writing JSON to tag: " + e.getMessage());
+            }
+            return;
+        }
+
+        // === 2. Handle JSON opened for viewing (demo import) ===
         if (handleIntentForDemo(intent)) {
             return;
         }
 
+        // === 3. Handle NFC tag read as usual ===
         lastTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         if (lastTag == null) {
             showMessage("No tag detected.");
@@ -172,6 +217,7 @@ public class MainActivity extends Activity {
             showMessage("Tag is not NDEF formatted.");
         }
     }
+
 
     // === Added: central handler for demo payloads ===
     // Returns true if a demo JSON was found and handled.
@@ -457,7 +503,7 @@ public class MainActivity extends Activity {
                 .create();
 
         // === Update logic ===
-        Runnable updatePreview = () -> {
+        @SuppressLint({"SetTextI18n", "DefaultLocale"}) Runnable updatePreview = () -> {
             int mode = modeSpinner.getSelectedItemPosition();
             int type = typeSpinner.getSelectedItemPosition();
             String team = teamInput.getText().toString().trim();
@@ -781,5 +827,41 @@ public class MainActivity extends Activity {
           //              | View.SYSTEM_UI_FLAG_FULLSCREEN
         //);
     }
+
+    private void exportJson() {
+        if (lastJson == null) {
+            showMessage("No battery data to export.");
+            return;
+        }
+
+        try {
+            // Get serial number field from JSON, or fallback if missing
+            String serial = lastJson.optString("sn", "unknown");
+
+            // Build filename as SERIAL.BEST.json
+            String fileName = serial + ".BEST.json";
+
+            File file = new File(getCacheDir(), fileName);
+            try (FileWriter writer = new FileWriter(file)) {
+                writer.write(lastJson.toString(2)); // pretty print
+            }
+
+            Uri uri = FileProvider.getUriForFile(
+                    this,
+                    getPackageName() + ".provider", // using unified provider
+                    file
+            );
+
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("application/json");
+            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(shareIntent, "Export Battery JSON"));
+
+        } catch (Exception e) {
+            showMessage("Export failed: " + e.getMessage());
+        }
+    }
+
 
 }
