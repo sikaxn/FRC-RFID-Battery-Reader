@@ -10,8 +10,8 @@ android {
         applicationId "com.IronMaple.batterytagreader"
         minSdk 24
         targetSdk 35
-        versionCode 7
-        versionName "1.32"
+        versionCode 10
+        versionName "1.33"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
