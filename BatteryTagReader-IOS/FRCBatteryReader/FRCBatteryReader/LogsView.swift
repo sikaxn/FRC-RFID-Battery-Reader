@@ -204,7 +204,7 @@ struct LogsView: View {
             let vVal = Int.random(in: 7...14)
 
             usage.append([
-                "id": startNumber + i,
+                "i": startNumber + i,
                 "t": t,
                 "d": dVal,              // 1 = robot, 2 = charger
                 "e": eVal,              // energy units
@@ -215,10 +215,9 @@ struct LogsView: View {
         let dict: [String: Any] = [
             "sn": sn,
             "fu": fu,
-            "n": Int.random(in: 0...2), // 0=normal, 1=practice only, 2=scrap (avoid 3=other for demo)
-            "cycle": Int.random(in: 1...10),
-            "number": startNumber,
-            "usage": usage
+            "cc": Int.random(in: 1...10),
+            "n": Int.random(in: 0...2),
+            "u": usage
         ]
         if let data = try? JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted]),
            let json = String(data: data, encoding: .utf8) {

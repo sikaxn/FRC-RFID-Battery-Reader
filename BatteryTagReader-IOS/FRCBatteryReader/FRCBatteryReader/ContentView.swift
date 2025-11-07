@@ -7,12 +7,14 @@ import SwiftUI
 import UIKit
 import Foundation
 import Combine
+import UniformTypeIdentifiers
 struct ContentView: View {
     @EnvironmentObject var nfc: NFCController
     @EnvironmentObject var store: LogStore
 
     @State private var showLogs = false
     @State private var showStatusPicker = false
+    @State private var isImporterPresented = false
 
     // New state variables for init new sheet
     @State private var showInitSheet = false
@@ -116,11 +118,29 @@ struct ContentView: View {
         .navigationTitle("Battery Tag Reader")
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
+                Button(action: { isImporterPresented = true }) {
+                    Image(systemName: "square.and.arrow.down")
+                }
+                .accessibilityLabel("Import")
                 Button(action: { shareBatteryJSON() }) {
                     Image(systemName: "square.and.arrow.up")
                 }
                 .accessibilityLabel("Share")
                 Button("View Logs") { showLogs = true }
+            }
+        }
+        .fileImporter(
+            isPresented: $isImporterPresented,
+            allowedContentTypes: [UTType.json],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    handleIncomingJSON(url)
+                }
+            case .failure(let error):
+                print("Import failed: \(error)")
             }
         }
         .sheet(isPresented: $showLogs) {
@@ -332,13 +352,13 @@ struct ContentView: View {
 
         guard let sn = obj["sn"] as? String else { return nil }
         let fu = (obj["fu"] as? String) ?? "0000000000"
-        let cycle = (obj["cycle"] as? Int) ?? (obj["cc"] as? Int) ?? 0
+        let cycle = (obj["cc"] as? Int) ?? (obj["cc"] as? Int) ?? 0
         let noteType = (obj["n"] as? Int) ?? 0
 
         var usage: [UsageEntry] = []
-        if let arr = obj["usage"] as? [[String: Any]] {
+        if let arr = obj["u"] as? [[String: Any]] {
             for e in arr {
-                let i = (e["id"] as? Int) ?? 0
+                let i = (e["i"] as? Int) ?? (e["id"] as? Int) ?? 0
                 let t = (e["t"] as? String) ?? "0000000000"
                 let d = (e["d"] as? Int) ?? 1 // 1 robot, 2 charger (default robot)
                 let en = (e["e"] as? Int) ?? 0
@@ -451,9 +471,9 @@ struct ContentView: View {
             "fu": payload.fu,
             "cc": payload.cc,
             "n": payload.n,
-            "usage": payload.u.map { e in
+            "u": payload.u.map { e in
                 [
-                    "id": e.i,
+                    "i": e.i,
                     "t": e.t,
                     "d": e.d,
                     "e": e.e,
@@ -475,7 +495,7 @@ struct ContentView: View {
                 root.present(activityVC, animated: true)
             }
         } catch {
-            let ac = UIAlertController(title: "Export failed", message: "Could not export battery JSON.", preferredStyle: .alert)
+            let ac = UIAlertController(title: "ExportExport failed", message: "Could not export battery JSON.", preferredStyle: .alert)
             ac.addAction(UIAlertAction(title: "OK", style: .default))
             UIApplication.shared.keyWindowTop?.present(ac, animated: true)
         }
@@ -484,24 +504,76 @@ struct ContentView: View {
     // MARK: - Import functionality
     /// Load a JSON file from a URL, parse, update NFC payload, log and chime.
     func handleIncomingJSON(_ url: URL) {
-        do {
-            let data = try Data(contentsOf: url)
-            guard let jsonStr = String(data: data, encoding: .utf8) else { return }
+        let fm = FileManager.default
 
-            if let payload = parseDemoJSON(jsonStr) {
-                // Update current NFC payload
-                nfc.payload = payload
-                // Log the imported data
-                store.log(.read, raw: jsonStr)
-                // Play the appropriate chime
-                SoundHelper.shared.play(note: NoteType(rawValue: payload.n) ?? .normal)
-                // Allow writing this imported tag
-                nfc.canWriteTag = true
-            } else {
-                print("Invalid battery JSON structure.")
+        // 1) Activate security-scoped access
+        let didStart = url.startAccessingSecurityScopedResource()
+        defer { if didStart { url.stopAccessingSecurityScopedResource() } }
+
+        var data: Data? = nil
+        let readURL = url
+
+        // 2) If the item is ubiquitous (iCloud / provider), ensure it's downloaded
+        if fm.isUbiquitousItem(at: readURL) {
+            // kick off download if needed (ignore errors; provider may not be iCloud)
+            try? fm.startDownloadingUbiquitousItem(at: readURL)
+            // wait briefly for availability
+            for _ in 0..<30 {
+                if (try? readURL.checkResourceIsReachable()) ?? false { break }
+                usleep(100_000) // 100ms x 30 ~= 3s
             }
-        } catch {
-            print("Failed to open JSON from URL: \(error)")
+        }
+
+        // 3) Try direct read first
+        do {
+            data = try Data(contentsOf: readURL, options: .mappedIfSafe)
+        } catch let err as NSError {
+            // 4) On permission error, coordinate a read and copy to a local temp URL
+            if err.domain == NSCocoaErrorDomain && err.code == 257 {
+                let coordinator = NSFileCoordinator()
+                var coordError: NSError?
+                coordinator.coordinate(readingItemAt: readURL, options: .withoutChanges, error: &coordError) { accessURL in
+                    let tmpURL = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString + "-" + accessURL.lastPathComponent)
+                    do {
+                        try? fm.removeItem(at: tmpURL)
+                        try fm.copyItem(at: accessURL, to: tmpURL)
+                        data = try Data(contentsOf: tmpURL, options: .mappedIfSafe)
+                        try? fm.removeItem(at: tmpURL)
+                    } catch {
+                        print("NSFileCoordinator copy/read failed: \(error)")
+                    }
+                }
+                if let coordError = coordError {
+                    print("NSFileCoordinator error: \(coordError)")
+                }
+                if data == nil {
+                    // As a final attempt, fallback to a simple copy (some providers allow this post-coordinate)
+                    let tmpURL = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString + "-" + readURL.lastPathComponent)
+                    do {
+                        try? fm.removeItem(at: tmpURL)
+                        try fm.copyItem(at: readURL, to: tmpURL)
+                        data = try Data(contentsOf: tmpURL, options: .mappedIfSafe)
+                        try? fm.removeItem(at: tmpURL)
+                    } catch {
+                        print("Fallback copy/read failed: \(error)")
+                    }
+                }
+            } else {
+                print("Failed to open JSON from URL: \(err)")
+            }
+        }
+
+        guard let finalData = data, let jsonStr = String(data: finalData, encoding: .utf8) else { return }
+
+        if let payload = parseDemoJSON(jsonStr) {
+            DispatchQueue.main.async {
+                nfc.payload = payload
+                store.log(.read, raw: jsonStr)
+                SoundHelper.shared.play(note: NoteType(rawValue: payload.n) ?? .normal)
+                nfc.canWriteTag = true  // Reveal the Write Tag button
+            }
+        } else {
+            print("Invalid battery JSON structure.")
         }
     }
 
@@ -539,4 +611,5 @@ struct ContentView: View {
             SoundHelper.shared.play(note: NoteType(rawValue: p.n) ?? .normal)
         }
     }
-} 
+}
+

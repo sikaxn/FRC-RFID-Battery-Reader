@@ -628,6 +628,9 @@
         }
       }
     },
+    "Import" : {
+
+    },
     "Incomplete data — preview unavailable" : {
       "localizations" : {
         "es" : {
@@ -981,7 +984,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新建"
+            "value" : "新电池"
           }
         }
       }
