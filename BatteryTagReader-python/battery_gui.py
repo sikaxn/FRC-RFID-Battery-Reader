@@ -82,6 +82,7 @@ class App(tk.Tk):
         ttk.Button(top, text="Charged", command=self.charged).pack(side=tk.LEFT)
         ttk.Button(top, text="Set Status", command=self.set_status).pack(side=tk.LEFT, padx=6)
         ttk.Button(top, text="Init New", command=self.init_new).pack(side=tk.LEFT)
+        ttk.Button(top, text="Write Tag", command=self.write_tag).pack(side=tk.LEFT, padx=6)
         
 
 
@@ -227,6 +228,16 @@ class App(tk.Tk):
             rd.write_ndef_text(p, mode="text")
         self._write_and_refresh(writer)
 
+    def write_tag(self):
+        """Write the current JSON doc to the tag."""
+        if not self._ensure_doc_or_warn():
+            return
+        payload = dumps_compact(self.doc)
+        def writer(rd, p=payload):
+            log_android_event("write", p)
+            rd.write_ndef_text(p, mode="text")
+        self._write_and_refresh(writer)
+
     # Set Status: set note type n (0..3)
     def set_status(self):
         if not self._ensure_doc_or_warn():
@@ -291,6 +302,22 @@ class App(tk.Tk):
         # UID label
         self.uid_lbl.config(text=self.uid)
 
+        # JSON or RAW
+        self.txt.delete("1.0", tk.END)
+        if self.doc:
+            # update meta entries
+            self.sn.set(self.doc.get("sn", ""))
+            self.fu.set(self.doc.get("fu", "0000000000"))
+            self.cc.set(self.doc.get("cc", 0))
+            self.nt.set(self.doc.get("n", 0))
+        elif self.raw_fallback is not None:
+            self.sn.set("")
+            self.fu.set("0000000000")
+            self.cc.set(0)
+            self.nt.set(0)
+        else:
+            self.status.set("Ready.")
+
         # Note badge
         n = self.nt.get()
         try:
@@ -300,25 +327,12 @@ class App(tk.Tk):
         label, bg, fg = NOTE_LABELS.get(n, NOTE_LABELS[0])
         self.note_badge.config(text=f"Note: {label} ({n})", bg=bg, fg=fg)
 
-        # JSON or RAW
-        self.txt.delete("1.0", tk.END)
         if self.doc:
-            # update meta entries
-            self.sn.set(self.doc.get("sn", ""))
-            self.fu.set(self.doc.get("fu", "0000000000"))
-            self.cc.set(self.doc.get("cc", 0))
-            self.nt.set(self.doc.get("n", 0))
             self.txt.insert(tk.END, dumps_pretty(self.doc))
             self.status.set(f"UID {self.uid} loaded (JSON).")
         elif self.raw_fallback is not None:
-            self.sn.set("")
-            self.fu.set("0000000000")
-            self.cc.set(0)
-            self.nt.set(0)
             self.txt.insert(tk.END, self.raw_fallback)
             self.status.set(f"UID {self.uid} loaded (RAW).")
-        else:
-            self.status.set("Ready.")
 
         # Usage list (most recent first)
         for i in self.tree.get_children():
