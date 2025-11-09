@@ -13,6 +13,9 @@ import android.nfc.tech.Ndef;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import org.json.JSONObject;
@@ -27,12 +30,35 @@ public class ImportActivity extends Activity {
     private NfcAdapter nfcAdapter;
     private String loadedJson = "";
     private boolean writePending = false;
+    private Button btnBackHome; // new fallback button
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Log.d("ImportActivity", "onCreate called");
+
+        // --- Simple layout container for fallback button ---
+        FrameLayout layout = new FrameLayout(this);
+        setContentView(layout);
+
+        // --- Create hidden fallback button ---
+        btnBackHome = new Button(this);
+        btnBackHome.setText("Back to Home");
+        btnBackHome.setVisibility(Button.GONE);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.gravity = Gravity.CENTER;
+        layout.addView(btnBackHome, params);
+
+        btnBackHome.setOnClickListener(v -> {
+            Intent intent = new Intent(ImportActivity.this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        });
 
         // --- Load JSON file from Intent ---
         try {
@@ -45,10 +71,9 @@ public class ImportActivity extends Activity {
                 while ((line = reader.readLine()) != null) sb.append(line);
                 reader.close();
 
-                // Remove all newlines, tabs, and multiple spaces before use
                 loadedJson = sb.toString()
-                        .replaceAll("[\\n\\r\\t]", "")   // remove line breaks and tabs
-                        .replaceAll(" +", " ")           // collapse multiple spaces
+                        .replaceAll("[\\n\\r\\t]", "")
+                        .replaceAll(" +", " ")
                         .trim();
 
                 Log.d("ImportActivity", "Loaded JSON: " + loadedJson.substring(0, Math.min(80, loadedJson.length())));
@@ -67,15 +92,24 @@ public class ImportActivity extends Activity {
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
 
         // --- Popup action dialog ---
-        new AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Import Battery JSON")
                 .setMessage("Choose what to do with this file:")
                 .setPositiveButton("View Content", (d, w) -> openInMain())
                 .setNegativeButton("Write Tag", (d, w) -> beginWriteMode())
                 .setNeutralButton("Cancel", (d, w) -> finish())
                 .show();
-    }
 
+        dialog.setCanceledOnTouchOutside(false);
+
+        // Fallback: show "Back to Home" if dismissed unexpectedly
+        dialog.setOnDismissListener(d -> {
+            if (!isFinishing() && btnBackHome != null) {
+                btnBackHome.setVisibility(Button.VISIBLE);
+                Toast.makeText(this, "Import cancelled or no action selected.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     private void beginWriteMode() {
         writePending = true;
