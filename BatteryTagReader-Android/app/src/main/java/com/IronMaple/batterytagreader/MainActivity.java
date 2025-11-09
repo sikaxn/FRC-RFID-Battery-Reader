@@ -18,6 +18,7 @@ import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -38,10 +39,12 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -880,34 +883,86 @@ public class MainActivity extends Activity {
             return;
         }
 
+        // Get serial number field from JSON, or fallback if missing
+        String serial = lastJson.optString("sn", "unknown");
+        String fileName = serial + ".BEST.json";
+
+        // Build the JSON and write to cache file (used for sharing)
+        File cacheFile = new File(getCacheDir(), fileName);
+        try (FileWriter writer = new FileWriter(cacheFile)) {
+            writer.write(lastJson.toString(2)); // pretty print
+        } catch (IOException | JSONException e) {
+            showMessage("Export failed: " + e.getMessage());
+            return;
+        }
+
+        // 🔹 Show choice dialog
+        new AlertDialog.Builder(this)
+                .setTitle("Export Battery JSON")
+                .setMessage("Choose how you want to export the file:")
+                .setPositiveButton("Share via apps", (dialog, which) -> {
+                    shareJsonFile(cacheFile);
+                })
+                .setNegativeButton("Save to Downloads", (dialog, which) -> {
+                    saveToDownloads(fileName);
+                })
+                .setNeutralButton("Cancel", null)
+                .show();
+    }
+
+    private void shareJsonFile(File file) {
+        Uri uri = FileProvider.getUriForFile(
+                this,
+                getPackageName() + ".provider",
+                file
+        );
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("*/*");
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(Intent.createChooser(shareIntent, "Share Battery JSON"));
+    }
+
+    private void saveToDownloads(String fileName) {
         try {
-            // Get serial number field from JSON, or fallback if missing
-            String serial = lastJson.optString("sn", "unknown");
+            File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            if (!downloads.exists()) downloads.mkdirs();
 
-            // Build filename as SERIAL.BEST.json
-            String fileName = serial + ".BEST.json";
+            // --- Split name and extension ---
+            File outFile = new File(downloads, fileName);
+            String baseName = fileName;
+            String extension = "";
 
-            File file = new File(getCacheDir(), fileName);
-            try (FileWriter writer = new FileWriter(file)) {
-                writer.write(lastJson.toString(2)); // pretty print
+            int dot = fileName.lastIndexOf('.');
+            if (dot > 0) {
+                baseName = fileName.substring(0, dot);
+                extension = fileName.substring(dot);
             }
 
-            Uri uri = FileProvider.getUriForFile(
-                    this,
-                    getPackageName() + ".provider", // using unified provider
-                    file
-            );
+            // --- Generate non-overwriting filename like "battery_1.BEST.json" ---
+            int counter = 1;
+            while (outFile.exists()) {
+                String newName = baseName + "_" + counter + extension;
+                outFile = new File(downloads, newName);
+                counter++;
+            }
 
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("application/json");
-            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
-            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(shareIntent, "Export Battery JSON"));
+            // --- Write JSON content ---
+            try (FileWriter writer = new FileWriter(outFile)) {
+                writer.write(lastJson.toString(2));
+            }
 
+            // --- Refresh in Files app immediately ---
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(outFile)));
+
+            showMessage("Saved to Downloads: " + outFile.getName());
         } catch (Exception e) {
-            showMessage("Export failed: " + e.getMessage());
+            showMessage("Save failed: " + e.getMessage());
         }
     }
+
+
 
 
 }

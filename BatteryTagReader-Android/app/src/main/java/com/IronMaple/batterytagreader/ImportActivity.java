@@ -76,6 +76,7 @@ public class ImportActivity extends Activity {
                 .show();
     }
 
+
     private void beginWriteMode() {
         writePending = true;
         Toast.makeText(this, "Tap and hold tag to write...", Toast.LENGTH_LONG).show();

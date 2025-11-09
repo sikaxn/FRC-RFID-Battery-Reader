@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
@@ -21,6 +22,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -196,8 +199,9 @@ public class LogActivity extends Activity {
 
     private void exportFile(String filename, String mime, boolean asJson) {
         try {
-            File file = new File(getCacheDir(), filename);
-            FileWriter writer = new FileWriter(file);
+            // Build the file in cache first
+            File cacheFile = new File(getCacheDir(), filename);
+            FileWriter writer = new FileWriter(cacheFile);
 
             JSONArray log = LogHelper.getLog(this);
             if (asJson) {
@@ -214,7 +218,6 @@ public class LogActivity extends Activity {
                         SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
                         utcFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-                        // Force ASCII digits / stable format regardless of device language
                         SimpleDateFormat localFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT);
                         localFormat.setTimeZone(TimeZone.getDefault());
 
@@ -223,32 +226,86 @@ public class LogActivity extends Activity {
                             localTime = localFormat.format(parsedUtcDate);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();  // fallback to raw UTC string
+                        e.printStackTrace();
                     }
 
                     String type = entry.optString("type", "");
                     String data = entry.optJSONObject("data").toString().replace("\"", "'");
-
                     writer.write(String.format(Locale.ROOT, "\"%s\",\"%s\",\"%s\"\n", localTime, type, data));
                 }
             }
-
             writer.close();
 
-            Intent share = new Intent(Intent.ACTION_SEND);
-            share.setType(mime);
-            share.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(
-                    this,
-                    getPackageName() + ".provider",
-                    file
-            ));
-            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(share, getString(R.string.chooser_share_log_title)));
+            // 🔹 Ask user: Save to Downloads or Share
+            new AlertDialog.Builder(this)
+                    .setTitle(asJson ? "Export Log (JSON)" : "Export Log (CSV)")
+                    .setMessage("Choose how you want to export the log file:")
+                    .setPositiveButton("Share via apps", (dialog, which) -> {
+                        shareFile(cacheFile, mime);
+                    })
+                    .setNegativeButton("Save to Downloads", (dialog, which) -> {
+                        saveToDownloads(cacheFile, filename);
+                    })
+                    .setNeutralButton("Cancel", null)
+                    .show();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    private void shareFile(File file, String mime) {
+        Uri uri = FileProvider.getUriForFile(
+                this,
+                getPackageName() + ".provider",
+                file
+        );
+
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType(mime);
+        share.putExtra(Intent.EXTRA_STREAM, uri);
+        share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(Intent.createChooser(share, getString(R.string.chooser_share_log_title)));
+    }
+
+    private void saveToDownloads(File source, String fileName) {
+        try {
+            File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            if (!downloads.exists()) downloads.mkdirs();
+
+            // --- Determine file extension ---
+            String extension = "";
+            int dot = fileName.lastIndexOf('.');
+            if (dot > 0) {
+                extension = fileName.substring(dot);  // e.g. .json or .csv
+            } else {
+                extension = ".log"; // fallback
+            }
+
+            // --- Generate timestamped standardized filename ---
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+            String newName = "BatteryReader_" + timeStamp + ".log" + extension;
+
+            File outFile = new File(downloads, newName);
+
+            // --- Copy the file ---
+            try (FileInputStream in = new FileInputStream(source);
+                 FileOutputStream out = new FileOutputStream(outFile)) {
+                byte[] buf = new byte[4096];
+                int len;
+                while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
+            }
+
+            // --- Make visible in Files app immediately ---
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(outFile)));
+
+            Toast.makeText(this, "Saved to Downloads: " + outFile.getName(), Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Save failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
 
     private void showClearConfirm() {
         final AlertDialog dialog = new AlertDialog.Builder(this)
