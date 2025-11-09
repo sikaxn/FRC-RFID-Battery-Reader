@@ -451,6 +451,11 @@ public class MainActivity extends Activity {
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(40, 30, 40, 10);
 
+        // --- Mode Selection ---
+        TextView modeLabel = new TextView(this);
+        modeLabel.setText("Select Mode:");
+        layout.addView(modeLabel);
+
         Spinner modeSpinner = new Spinner(this);
         ArrayAdapter<String> modeAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item,
@@ -460,31 +465,52 @@ public class MainActivity extends Activity {
         modeSpinner.setSelection(lastMode);
         layout.addView(modeSpinner);
 
+        // --- Team Number ---
+        TextView teamLabel = new TextView(this);
+        teamLabel.setText("Team Number:");
+        layout.addView(teamLabel);
+
         EditText teamInput = new EditText(this);
-        teamInput.setHint("Team Number (1–5 digits)");
+        teamInput.setHint("Enter team number (1–5 digits)");
         teamInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         teamInput.setText(lastTeam);
         layout.addView(teamInput);
 
+        // --- Battery Type ---
+        TextView typeLabel = new TextView(this);
+        typeLabel.setText("Battery Type:");
+        layout.addView(typeLabel);
+
         Spinner typeSpinner = new Spinner(this);
         ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item,
-                new String[]{"New", "Old", "Special"});
+                new String[]{"New Battery", "Old Battery", "Special Battery"});
         typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         typeSpinner.setAdapter(typeAdapter);
         typeSpinner.setSelection(lastType);
         layout.addView(typeSpinner);
 
+        // --- Battery ID ---
+        TextView idLabel = new TextView(this);
+        idLabel.setText("Battery ID:");
+        layout.addView(idLabel);
+
         EditText idInput = new EditText(this);
-        idInput.setHint("Battery ID");
+        idInput.setHint("Enter Battery ID");
         idInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         layout.addView(idInput);
 
+        // --- Manual Serial ---
+        TextView manualLabel = new TextView(this);
+        manualLabel.setText("Manual Serial:");
+        layout.addView(manualLabel);
+
         EditText manualInput = new EditText(this);
-        manualInput.setHint("Manual Serial (ASCII ≤ 8 chars)");
+        manualInput.setHint("ASCII ≤ 8 chars");
         manualInput.setInputType(InputType.TYPE_CLASS_TEXT);
         layout.addView(manualInput);
 
+        // --- Preview ---
         TextView preview = new TextView(this);
         preview.setPadding(0, 20, 0, 10);
         preview.setTextColor(0xFF808080);
@@ -510,15 +536,29 @@ public class MainActivity extends Activity {
             String idStr = idInput.getText().toString().trim();
             String manual = manualInput.getText().toString().trim();
 
-            manualInput.setVisibility(mode == 0 ? View.VISIBLE : View.GONE);
-            teamInput.setVisibility(mode == 1 ? View.VISIBLE : View.GONE);
-            typeSpinner.setVisibility(mode == 1 ? View.VISIBLE : View.GONE);
-            idInput.setVisibility((mode == 1 && type != 2) ? View.VISIBLE : View.GONE);
+            boolean isManual = (mode == 0);
+            boolean isBest = (mode == 1);
 
+            // === Control field visibility ===
+            manualLabel.setVisibility(isManual ? View.VISIBLE : View.GONE);
+            manualInput.setVisibility(isManual ? View.VISIBLE : View.GONE);
+
+            teamLabel.setVisibility(isBest ? View.VISIBLE : View.GONE);
+            teamInput.setVisibility(isBest ? View.VISIBLE : View.GONE);
+
+            typeLabel.setVisibility(isBest ? View.VISIBLE : View.GONE);
+            typeSpinner.setVisibility(isBest ? View.VISIBLE : View.GONE);
+
+            boolean showId = isBest && type != 2;
+            idLabel.setVisibility(showId ? View.VISIBLE : View.GONE);
+            idInput.setVisibility(showId ? View.VISIBLE : View.GONE);
+
+            // === Validation + Preview ===
             String result = null;
             boolean valid = true;
 
             if (mode == 0) {
+                // Manual Serial Input mode
                 if (manual.isEmpty() || manual.length() > 8) {
                     preview.setText("Incomplete or too long");
                     preview.setTextColor(0xFFFF0000);
@@ -533,6 +573,7 @@ public class MainActivity extends Activity {
                     preview.setTextColor(0xFF00AA00);
                 }
             } else {
+                // BEST Scheme mode
                 if (team.isEmpty() || !team.matches("\\d{1,5}")) {
                     preview.setText("Incomplete team number");
                     preview.setTextColor(0xFFFF0000);
@@ -584,12 +625,15 @@ public class MainActivity extends Activity {
             }
 
             resultHolder[0] = result;
+
+            // Enable OK only if valid
             if (alert.isShowing()) {
                 Button ok = alert.getButton(AlertDialog.BUTTON_POSITIVE);
                 if (ok != null) ok.setEnabled(valid);
             }
         };
 
+        // === Dialog event setup ===
         alert.setOnShowListener(d -> {
             Button okButton = alert.getButton(AlertDialog.BUTTON_POSITIVE);
             okButton.setEnabled(false);
@@ -621,6 +665,7 @@ public class MainActivity extends Activity {
                 }
             });
 
+            // === Update listeners ===
             TextWatcher watcher = new SimpleTextWatcher(updatePreview);
             teamInput.addTextChangedListener(watcher);
             idInput.addTextChangedListener(watcher);
@@ -633,6 +678,7 @@ public class MainActivity extends Activity {
 
         alert.show();
     }
+
 
     // === small helper classes ===
     private static class SimpleTextWatcher implements TextWatcher {
