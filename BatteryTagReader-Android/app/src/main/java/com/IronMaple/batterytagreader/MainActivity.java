@@ -887,27 +887,47 @@ public class MainActivity extends Activity {
         String serial = lastJson.optString("sn", "unknown");
         String fileName = serial + ".BEST.json";
 
-        // Build the JSON and write to cache file (used for sharing)
+        // Build JSON and write to cache for sharing
         File cacheFile = new File(getCacheDir(), fileName);
         try (FileWriter writer = new FileWriter(cacheFile)) {
-            writer.write(lastJson.toString(2)); // pretty print
+            writer.write(lastJson.toString(2));
         } catch (IOException | JSONException e) {
             showMessage("Export failed: " + e.getMessage());
             return;
         }
 
-        // 🔹 Show choice dialog
+        // --- Choice dialog with new Print option ---
         new AlertDialog.Builder(this)
                 .setTitle("Export Battery JSON")
                 .setMessage("Choose how you want to export the file:")
-                .setPositiveButton("Share via apps", (dialog, which) -> {
-                    shareJsonFile(cacheFile);
-                })
-                .setNegativeButton("Save to Downloads", (dialog, which) -> {
-                    saveToDownloads(fileName);
-                })
-                .setNeutralButton("Cancel", null)
+                .setPositiveButton("Share via apps", (dialog, which) -> shareJsonFile(cacheFile))
+                .setNegativeButton("Save to Downloads", (dialog, which) -> saveToDownloads(fileName))
+                .setNeutralButton("Print", (dialog, which) -> generateAndOpenPrintPage())
                 .show();
+    }
+    private void generateAndOpenPrintPage() {
+        try {
+            // Convert JSON to HTML (mirrors battery_print.py structure)
+            String html = BatteryReportHtmlGenerator.generateHtml(lastJson);
+
+            // Save to a temp HTML file
+            File outFile = new File(getCacheDir(), "BatteryReport_" +
+                    new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".html");
+            try (FileWriter writer = new FileWriter(outFile)) {
+                writer.write(html);
+            }
+
+            // Open in browser
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".provider", outFile);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, "text/html");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(intent);
+
+        } catch (Exception e) {
+            showMessage("Print generation failed: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void shareJsonFile(File file) {
