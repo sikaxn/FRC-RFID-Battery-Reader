@@ -26,7 +26,6 @@
 /* Begin PBXFileReference section */
 		D8F8883F2E763AB4000E35DC /* FRCBatteryReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FRCBatteryReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8F8886A2E763C93000E35DC /* CoreNFC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreNFC.framework; path = System/Library/Frameworks/CoreNFC.framework; sourceTree = SDKROOT; };
-		D8F9ED082E7E45B1006E123C /* FRC Battery Reader - Clip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "FRC Battery Reader - Clip.app"; path = "/Users/nathan/Documents/GitHub/FRC-RFID-Battery-Reader/BatteryTagReader-IOS/FRCBatteryReader/build/Debug-iphoneos/FRC Battery Reader - Clip.app"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -65,7 +64,6 @@
 		D81E74F22E885B3B00B8B7F8 /* Recovered References */ = {
 			isa = PBXGroup;
 			children = (
-				D8F9ED082E7E45B1006E123C /* FRC Battery Reader - Clip.app */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";

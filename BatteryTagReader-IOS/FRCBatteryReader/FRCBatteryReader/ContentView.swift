@@ -126,6 +126,10 @@ struct ContentView: View {
                     Image(systemName: "square.and.arrow.up")
                 }
                 .accessibilityLabel("Share")
+                Button(action: { printBatteryHTML() }) {
+                    Image(systemName: "printer")
+                }
+                .accessibilityLabel("Print")
                 Button("View Logs") { showLogs = true }
             }
         }
@@ -585,6 +589,28 @@ struct ContentView: View {
             SoundHelper.shared.play(note: NoteType(rawValue: payload.n) ?? .normal)
             nfc.canWriteTag = false
         }
+    }
+
+    func printBatteryHTML() {
+        guard let payload = nfc.payload else {
+            let ac = UIAlertController(title: "No tag loaded", message: "Scan a battery tag first.", preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            UIApplication.shared.keyWindowTop?.present(ac, animated: true)
+            return
+        }
+
+        let html = BatteryHtmlGenerator.generateHTML(from: payload)
+
+        let formatter = UIMarkupTextPrintFormatter(markupText: html)
+        let printInfo = UIPrintInfo(dictionary: nil)
+        printInfo.outputType = .general
+        printInfo.jobName = "Battery \(payload.sn)"
+        printInfo.orientation = .portrait
+
+        let controller = UIPrintInteractionController.shared
+        controller.printInfo = printInfo
+        controller.printFormatter = formatter
+        controller.present(animated: true)
     }
     // MARK: - Centralized NFC Write Helper
     /// Helper to perform NFC tag write, optionally appending a usage entry and/or incrementing cycle count.
