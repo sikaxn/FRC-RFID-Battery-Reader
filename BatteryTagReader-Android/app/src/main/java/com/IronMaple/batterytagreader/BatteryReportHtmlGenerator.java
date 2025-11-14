@@ -38,8 +38,7 @@ public class BatteryReportHtmlGenerator {
         for (JSONObject ent : rows) {
             int i = ent.optInt("i", 0);
             String t = fmtTime(ent.optString("t", ""));
-            int d = ent.optInt("d", 0);
-            String device = (d == 1) ? "Robot" : (d == 2) ? "Charger" : "Unknown";
+            int d = ent.optInt("d", 0);            String device = (d == 1) ? "Robot" : (d == 2) ? "Charger" : "Unknown";
             int e = ent.optInt("e", 0);
             int v = ent.optInt("v", 0);
             String rowClass = (d == 2) ? " class='charger-row'" : "";
